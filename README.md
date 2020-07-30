@@ -1,8 +1,7 @@
 # ParkinsonSpiral
 
-## Examples
-
 # Refined research questions
+How can recurrent neural networks be used as a cost-effective detection method for Parkinson's Disease? 
 
 # Any models of interest from ModelDB or Internet
 Dataset: https://www.kaggle.com/team-ai/parkinson-disease-spiral-drawings?select=readme.txt
