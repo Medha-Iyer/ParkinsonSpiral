@@ -1,7 +1,7 @@
 # ParkinsonSpiral
 
 # Refined research questions
-How can recurrent neural networks be used as a cost-effective detection method for Parkinson's Disease?
+How can recurrent neural networks be used as a cost-effective detection method for Parkinson's Disease? 
 
 # Any models of interest from ModelDB or Internet
 
