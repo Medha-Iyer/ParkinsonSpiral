@@ -9,8 +9,8 @@ Created on Tue Aug  4 15:00:23 2020
 import os
 import numpy as np
 import cv2
-import torch
-import torchvision
+#import torch
+#import torchvision
 
 
 #The data below represents the largest row and column size for each category
@@ -27,7 +27,7 @@ def padWithWhite(img, newRow, newCol):
     new_img = cv2.copyMakeBorder(img,top,bot,left,right,cv2.BORDER_CONSTANT, value = [255,255,255])
     return new_img
 
-def uploadData(filePath):
+def preprocess(inPath,outPath):
     """Uploads data into a numpy array
         parameter: filePath – the path to the Image_Data folder
         returns: a tuple containing a numpy array of the data and an vertical vector
@@ -37,7 +37,7 @@ def uploadData(filePath):
     data = []
     values = [] # 1 for PD and 0 for Healthy
     
-    DATADIR = filePath
+    DATADIR = inPath
     cat1 = ["Healthy","Patient"]
     cat2 = ["Meander","Spiral"]
     for healthy in cat1:
@@ -83,10 +83,27 @@ def uploadData(filePath):
 #             data[row][col] = trans(data[row][col])
 # =============================================================================
             data[row][col] = data[row][col].astype('f')
-            data[row][col] = data[row][col].transpose(2,0,1)
+            #data[row][col] = data[row][col].transpose(2,0,1)
             data[row][col] = data[row][col] / 255.0
+    shuffle_index = np.random.permutation(263)
+    X = np.array(data)
+    y = np.array(values)
+    X,y = X[shuffle_index],y[shuffle_index]
+    X_test,X_train = X[:53], X[53:]
+    y_test,y_train = y[:53], y[53:]
     
-    return data,np.array(values).reshape(-1,1)
+    
+    np.save(os.path.join(outPath,"X_train.npy"),X_train)
+    np.save(os.path.join(outPath,"X_test.npy"),X_test)
+    np.save(os.path.join(outPath,"y_train.npy"),y_train)
+    np.save(os.path.join(outPath,"y_test.npy"),y_test)
 
-if __name__ == '__main__':
-    all_data = uploadData('/Users/adamwasserman/Documents/Image_Data')
+
+def getData(filePath):
+    """Returns the X_train,X_test,y_train,y_test in that order"""
+    
+    X_train = np.load(os.path.join(filePath,"X_train.npy"),allow_pickle=True)
+    X_test = np.load(os.path.join(filePath,"X_test.npy"),allow_pickle=True)
+    y_train = np.load(os.path.join(filePath,"y_train.npy"),allow_pickle=True)
+    y_test = np.load(os.path.join(filePath,"y_test.npy"),allow_pickle=True)
+    return X_train,X_test,y_train,y_test
