@@ -9,14 +9,14 @@ import torch
 from torch import nn
 
 class SimpleConv(nn.Module):
-  def __init__(self, num_classes, spiral_size, meander_size, circle_size):
+  def __init__(self, num_classes, meander_size, spiral_size, circle_size):
       super(SimpleConv, self).__init__()
-      self.spiral_size = spiral_size
       self.meander_size = meander_size
+      self.spiral_size = spiral_size
       self.circle_size = circle_size
       self.dim = 0 #dimensions of image after concatenation (set in forward())
 
-      self.spiral_nn = nn.Sequential(
+      self.meander_nn = nn.Sequential(
           nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
@@ -32,7 +32,7 @@ class SimpleConv(nn.Module):
           nn.MaxPool2d(kernel_size=3, stride=2),
       )
 
-      self.meander_nn = nn.Sequential(
+      self.spiral_nn = nn.Sequential(
           nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
@@ -72,20 +72,21 @@ class SimpleConv(nn.Module):
           nn.Linear(4096, 4096),
           nn.ReLU(inplace=True),
           nn.Linear(4096, num_classes),
+          nn.sigmoid(num_classes)
       )
 
-  def forward(self, spirals, meanders, circles):
-      spirals = self.spiral_nn(spirals)
-      spirals = spirals.view(spirals.size(0), -1)
-
+  def forward(self, meanders, spirals, circles):
       meanders = self.meander_nn(meanders)
       meanders = meanders.view(meanders.size(0), -1)
+
+      spirals = self.spiral_nn(spirals)
+      spirals = spirals.view(spirals.size(0), -1)
 
       circles = self.circle_nn(circles)
       circles = circles.view(circles.size(0), -1)
 
       # now we can concatenate them
-      combined = torch.cat((spirals, meanders, circles), dim=1)
+      combined = torch.cat((meanders, spirals, circles), dim=1)
       self.dim = combined.shape()[1]
       out = self.concat_nn(combined)
 
@@ -101,4 +102,4 @@ class SimpleConv(nn.Module):
 
 if __name__ =='__main__':
     num_classes = 2
-    model = SimpleConv(num_classes, spiral_size=756*786, meander_size=744*822, circle_size=675*720)
+    model = SimpleConv(num_classes, meander_size=744*822, spiral_size=756*786, circle_size=675*720)

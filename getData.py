@@ -40,7 +40,7 @@ def uploadData(filePath):
     DATADIR = filePath
     cat1 = ["Healthy","Patient"]
     cat2 = ["Meander","Spiral"]
-    for healthy in cat1:
+    for healthy in cat1: #TODO refactor code: change healthy to a better variable name probably "status" or "label"
         tag = "H" if healthy == 'Healthy' else "P"
         size = 38 if healthy == "Healthy" else 32
         for j in range(1,size+1):
