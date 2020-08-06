@@ -72,7 +72,7 @@ class SimpleConv(nn.Module):
           nn.Linear(4096, 4096),
           nn.ReLU(inplace=True),
           nn.Linear(4096, num_classes),
-          nn.sigmoid(num_classes)
+          nn.Sigmoid(num_classes)
       )
 
   def forward(self, meanders, spirals, circles):

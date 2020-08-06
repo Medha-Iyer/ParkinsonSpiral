@@ -5,7 +5,7 @@ class Dataset(torch.utils.data.Dataset):
         self.values = torch.from_numpy(values)
 
     def __len__(self):
-        return len(self.meanders)
+        return len(self.X)
 
     def __getitem__(self, idx):
-        return self.meanders[idx], self.spirals[idx], self.circles[idx], self.values[idx]
+        return self.X[idx], self.values[idx]
