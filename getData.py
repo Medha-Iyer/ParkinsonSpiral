@@ -87,11 +87,12 @@ def preprocess(inPath,outPath):
     data = data.type('torch.FloatTensor')
     data /= 255.0
     data = data.permute(0,1,4,2,3)
-    shuffle_index = torch.randperm(263)
+    shuffle_index = torch.randperm(259)
+    
     X,y= data[shuffle_index], values[shuffle_index]
 
-    X_test,X_train = X[:53], X[53:]
-    y_test,y_train = y[:53], y[53:]
+    X_test,X_train = X[:52], X[52:]
+    y_test,y_train = y[:52], y[52:]
      
      
     torch.save(X_train,os.path.join(outPath,"X_train.pt"))
@@ -109,3 +110,5 @@ def getData(filePath):
     y_train = torch.load(os.path.join(filePath,"y_train.pt"))
     y_test = torch.load(os.path.join(filePath,"y_test.pt"))
     return X_train,X_test,y_train,y_test
+    
+preprocess('/projectnb/riseprac/GroupB','/projectnb/riseprac/GroupB')
