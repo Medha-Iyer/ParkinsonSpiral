@@ -7,19 +7,28 @@ Created on Tue Aug  4 15:00:23 2020
 """
 
 import os
-import numpy as np
+import numpy as np #it says never used but images come as numpy arrays; kept to be safe
 import cv2
-#import torch
+import torch
 #import torchvision
-
-
+"""
+File set-up: Have the 6 image folders in a single directory
+Pass the directory as the first argument to the preprocess function
+All the healthy folders should begin with "Healthy"
+and all the patient files with "Patient"
+The shape drawn should follow the subject's condition
+Naming should be in camel-case (no plural!)
+EX: HealthySpiral
+"""
 #The data below represents the largest row and column size for each category
-dimensions = {"Meander": (744,822), "Spiral":(756,786),"Circle":(675,720)}
+dimensions = {"Meander": (744,822), "Spiral":(756,786),"Circle":(675,720)} # no longer used
 
 
-def padWithWhite(img, newRow, newCol):
-    row_add = newRow - img.shape[0]
-    col_add = newCol - img.shape[1]
+
+
+def padWithWhite(img):
+    row_add = 756 - img.shape[0]
+    col_add = 822 - img.shape[1]
     top = row_add//2
     bot = top if row_add % 2 == 0 else top + 1
     left = col_add//2
@@ -58,8 +67,7 @@ def preprocess(inPath,outPath):
                         delete = True
                     else: #can only perform if img_array isn't None
                         img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
-                        newShape = dimensions[category]
-                        temp.append(padWithWhite(img_array,*newShape))
+                        temp.append(torch.from_numpy(padWithWhite(img_array)))
                         
                 path = os.path.join(DATADIR,healthy+"Circle")
                 img_name = "circA-P"+str(j)+".jpg"
@@ -69,41 +77,35 @@ def preprocess(inPath,outPath):
                     temp.clear()
                     continue
                 img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
-                temp.append(padWithWhite(img_array,675,720))#hard-coded for now
-                data.append(temp)
+                temp.append(torch.from_numpy(padWithWhite(img_array)))#hard-coded for now
+                data.append(torch.stack(temp))
                 values.append(1 if healthy == "Patient" else 0)
     
     #trans=torchvision.transforms.Normalize(0.5,0.5,inplace=True)
-    for row in range(len(data)):
-        for col in range(len(data[0])):
-# =============================================================================
-#             data[row][col] = torch.from_numpy(data[row][col])
-#             data[row][col] = data[row][col].float()
-#             data[row][col] = data[row][col].permute(2,0,1)
-#             data[row][col] = trans(data[row][col])
-# =============================================================================
-            data[row][col] = data[row][col].astype('f')
-            #data[row][col] = data[row][col].transpose(2,0,1)
-            data[row][col] = data[row][col] / 255.0
-    shuffle_index = np.random.permutation(263)
-    X = np.array(data)
-    y = np.array(values)
-    X,y = X[shuffle_index],y[shuffle_index]
+    data = torch.stack(data)
+    values = torch.tensor(values)
+    data = data.type('torch.DoubleTensor')
+    data /= 255.0
+    data = data.permute(0,1,4,2,3)
+    shuffle_index = torch.randperm(263)
+    X,y= data[shuffle_index], values[shuffle_index]
+
     X_test,X_train = X[:53], X[53:]
     y_test,y_train = y[:53], y[53:]
-    
-    
-    np.save(os.path.join(outPath,"X_train.npy"),X_train)
-    np.save(os.path.join(outPath,"X_test.npy"),X_test)
-    np.save(os.path.join(outPath,"y_train.npy"),y_train)
-    np.save(os.path.join(outPath,"y_test.npy"),y_test)
+     
+     
+    torch.save(X_train,os.path.join(outPath,"X_train.pt"))
+    torch.save(X_test,os.path.join(outPath,"X_test.pt"))
+    torch.save(y_train,os.path.join(outPath,"y_train.pt"))
+    torch.save(y_test,os.path.join(outPath,"y_test.pt"))
+
 
 
 def getData(filePath):
     """Returns the X_train,X_test,y_train,y_test in that order"""
     
-    X_train = np.load(os.path.join(filePath,"X_train.npy"),allow_pickle=True)
-    X_test = np.load(os.path.join(filePath,"X_test.npy"),allow_pickle=True)
-    y_train = np.load(os.path.join(filePath,"y_train.npy"),allow_pickle=True)
-    y_test = np.load(os.path.join(filePath,"y_test.npy"),allow_pickle=True)
+    X_train = torch.load(os.path.join(filePath,"X_train.pt"))
+    X_test = torch.load(os.path.join(filePath,"X_test.pt"))
+    y_train = torch.load(os.path.join(filePath,"y_train.pt"))
+    y_test = torch.load(os.path.join(filePath,"y_test.pt"))
     return X_train,X_test,y_train,y_test
