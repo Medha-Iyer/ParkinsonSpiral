@@ -7,7 +7,7 @@ Created on Tue Aug  4 15:00:23 2020
 """
 
 import os
-import numpy as np #it says never used but images come as numpy arrays; kept to be safe
+import numpy as np #images come as numpy arrays; kept to be safe
 import cv2
 import torch
 #import torchvision
@@ -49,18 +49,18 @@ def preprocess(inPath,outPath):
     DATADIR = inPath
     cat1 = ["Healthy","Patient"]
     cat2 = ["Meander","Spiral"]
-    for healthy in cat1: #TODO refactor code: change healthy to a better variable name probably "status" or "label"
-        tag = "H" if healthy == 'Healthy' else "P"
-        size = 38 if healthy == "Healthy" else 32
-        for j in range(1,size+1):
+    for health in cat1:
+        tag = "H" if health == 'Healthy' else "P"
+        size = 38 if health == "Healthy" else 32
+        for subject in range(1,size+1):
             for i in range (1,5):
                 delete = False
                 temp = []
-                for category in cat2:
-                    abrev = 'mea' if category == 'Meander' else 'sp'
+                for shape in cat2:
+                    abrev = 'mea' if shape == 'Meander' else 'sp'
             
-                    path = os.path.join(DATADIR,healthy+category)
-                    img_name = abrev + str(i) + '-' + tag+str(j)+'.jpg'
+                    path = os.path.join(DATADIR,health+shape)
+                    img_name = abrev + str(i) + '-' + tag+str(subject)+'.jpg'
                     img_array = cv2.imread(os.path.join(path,img_name))
                     
                     if img_array is None: # look for missing data
@@ -69,8 +69,8 @@ def preprocess(inPath,outPath):
                         img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
                         temp.append(torch.from_numpy(padWithWhite(img_array)))
                         
-                path = os.path.join(DATADIR,healthy+"Circle")
-                img_name = "circA-P"+str(j)+".jpg"
+                path = os.path.join(DATADIR,health+"Circle")
+                img_name = "circA-P"+str(subject)+".jpg"
                 img_array = cv2.imread(os.path.join(path,img_name),cv2.COLOR_BGR2RGB)
                 
                 if img_array is None or delete == True: # datapoints with missing data
@@ -79,9 +79,9 @@ def preprocess(inPath,outPath):
                 img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
                 temp.append(torch.from_numpy(padWithWhite(img_array)))#hard-coded for now
                 data.append(torch.stack(temp))
-                values.append(1 if healthy == "Patient" else 0)
+                values.append(1 if health == "Patient" else 0)
     
-    #trans=torchvision.transforms.Normalize(0.5,0.5,inplace=True)
+    
     data = torch.stack(data)
     values = torch.tensor(values)
     data = data.type('torch.DoubleTensor')
