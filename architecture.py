@@ -9,12 +9,11 @@ import torch
 from torch import nn
 
 class SimpleConv(nn.Module):
-  def __init__(self, num_classes, meander_size, spiral_size, circle_size):
+  def __init__(self, num_classes,size):
       super(SimpleConv, self).__init__()
-      self.meander_size = meander_size
-      self.spiral_size = spiral_size
-      self.circle_size = circle_size
       self.dim = 0 #dimensions of image after concatenation (set in forward())
+      self.size = size
+      self.num_classes = num_classes
 
       self.meander_nn = nn.Sequential(
           nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
@@ -63,17 +62,18 @@ class SimpleConv(nn.Module):
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
       )
-
+      
       self.concat_nn = nn.Sequential(
           nn.Dropout(),
-          nn.Linear(self.dim, 4096),
+          nn.Linear(405504, 4096),
           nn.ReLU(inplace=True),
           nn.Dropout(),
           nn.Linear(4096, 4096),
           nn.ReLU(inplace=True),
-          nn.Linear(4096, num_classes),
-          nn.Sigmoid(num_classes)
+          nn.Linear(4096, self.num_classes),
+          nn.Sigmoid()
       )
+
 
   def forward(self, meanders, spirals, circles):
       meanders = self.meander_nn(meanders)
@@ -87,7 +87,7 @@ class SimpleConv(nn.Module):
 
       # now we can concatenate them
       combined = torch.cat((meanders, spirals, circles), dim=1)
-      self.dim = combined.shape()[1]
+      self.dim = combined.shape[1]
       out = self.concat_nn(combined)
 
       return out

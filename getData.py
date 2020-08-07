@@ -79,12 +79,12 @@ def preprocess(inPath,outPath):
                 img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
                 temp.append(torch.from_numpy(padWithWhite(img_array)))#hard-coded for now
                 data.append(torch.stack(temp))
-                values.append(1 if health == "Patient" else 0)
+                values.append(1.0 if health == "Patient" else 0.0)
     
     
     data = torch.stack(data)
     values = torch.tensor(values)
-    data = data.type('torch.DoubleTensor')
+    data = data.type('torch.FloatTensor')
     data /= 255.0
     data = data.permute(0,1,4,2,3)
     shuffle_index = torch.randperm(263)

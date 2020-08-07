@@ -1,8 +1,8 @@
 import torch
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, X, values):
-        self.X = torch.from_numpy(X)
-        self.values = torch.from_numpy(values)
+        self.X = X
+        self.values = values
 
     def __len__(self):
         return len(self.X)
