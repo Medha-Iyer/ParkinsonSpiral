@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
-epochs = 100 #what value should we set this
-batch_size = 5
+epochs = sys.argv[2] #what value should we set this
+batch_size = sys.argv[3]
 threshold = 0.5
 run_num = sys.argv[1]
 losses = []
