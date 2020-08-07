@@ -83,5 +83,4 @@ print('Confusion matrix:', '\n',conf_mat[0],'\n',conf_mat[1])
 
 torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/state_dict.pt')
 
-
     
