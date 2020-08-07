@@ -5,17 +5,19 @@ import torch
 from torch import nn
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 epochs = 100 #what value should we set this
 batch_size = 5
 threshold = 0.5
-run_num = 1
+run_num = sys.argv[1]
 losses = []
 accs = []
 precision = []
 recall = []
 f1 = []
 
+print(run_num)
 conf_mat = np.zeros((2,2), dtype = 'i')
 
 X_train,X_test,y_train,y_test = getData.getData('/Users/adamwasserman/Documents/RISE/Project')
