@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 epochs = 100 #what value should we set this
 batch_size = 5
 threshold = 0.5
+run_num = 1
 losses = []
 accs = []
 precision = []
@@ -57,31 +58,30 @@ for i in range (epochs):
     f1.append(2* ((precision*recall)/(precision+recall)))
 
 
-x = range(len(losses))
+x = list(range(len(losses)))
 
 fig = plt.figure()
 plt.plot(x,losses,color = 'r')
 plt.x_label('Minibatches')
 plt.y_label('Loss')
-plt.show()
+plt.savefig('./images/loss'+run_num+'.png')
 
 plt.plot(x,acc,color = 'g')
 plt.y_label('Accuracy (dec)')
-plt.show()
+plt.savefig('./images/accuracy'+run_num+'.png')
 
-x = range(epochs)
+x = list(range(epochs))
 plt.plot(x,precision,color='b',label = 'precision')
 plt.plot(x,recall,color='r', label = 'recall')
 plt.plot(x,f1,color='k',label = 'f1 score')
 
 plt.x_label("Epoch")
 plt.y_label("Score (%)")
-plt.show()
+plt.savefig('./images/scores'+run_num+'.png')
 
 
 print('Confusion matrix:', '\n',conf_mat[0],'\n',conf_mat[1])
 
 torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/state_dict.pt')
-
 
     
