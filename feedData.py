@@ -4,11 +4,14 @@ import Dataset
 import torch
 from torch import nn
 import numpy as np
+import matplotlib.pyplot as plt
 
-epochs = 15 #what value should we set this
+epochs = 100 #what value should we set this
 batch_size = 5
 losses = []
 accs = []
+
+conf_mat = np.zeros((2,2), dtype = 'i')
 
 X_train,X_test,y_train,y_test = getData.getData('/Users/adamwasserman/Documents/RISE/Project')
 
@@ -32,6 +35,9 @@ for i in range (epochs):
         yhat = (yhat>0.5).float()
         acc = torch.eq(yhat.round(), data[1]).float().mean()  # accuracy
         
+        for pred,actual in zip(yhat,data[1]):
+            conf_mat[actual,pred] += 1
+        
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -41,4 +47,22 @@ for i in range (epochs):
         if j % 5 == 1:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                  epochs, np.round(loss.data[0], 3), np.round(acc.data[0], 3)))
+
+x = range(len(losses))
+
+fig = plt.figure()
+plt.plot(x,losses,color = 'r')
+plt.x_label('Minibatches')
+plt.y_label('Loss')
+plt.show()
+
+plt.plot(x,acc,color = 'g')
+plt.y_label('Accuracy (dec)')
+plt.show()
+
+print('Confusion matrix:', conf_mat)
+
+torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/state_dict.pt')
+
+
     
