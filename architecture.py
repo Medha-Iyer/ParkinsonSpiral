@@ -67,7 +67,7 @@ class SimpleConv(nn.Module):
           nn.Dropout(),
           nn.Linear(405504, 4096),
           nn.ReLU(inplace=True),
-          nn.Dropout(),
+          nn.Dropout(p = 0.35),
           nn.Linear(4096, 4096),
           nn.ReLU(inplace=True),
           nn.Linear(4096, self.num_classes),
