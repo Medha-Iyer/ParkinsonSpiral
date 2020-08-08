@@ -1,13 +1,13 @@
 from architecture import SimpleConv
-import getData
 import Dataset
 import torch
 from torch import nn
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 epochs = 100 #what value should we set this
-batch_size = 10
+batch_size = 15
 threshold = 0.5
 run_num = 1
 losses = []
@@ -16,9 +16,14 @@ precision = []
 recall = []
 f1 = []
 
-conf_mat = np.zeros((2,2), dtype = 'i')
+conf_mat = torch.zeros(2,2)
 
-X_train,X_test,y_train,y_test = getData.getData('/Users/adamwasserman/Documents/RISE/Project')
+filePath = '/projectnb/riseprac/GroupB'
+
+X_train = torch.load(os.path.join(filePath,"X_train.pt"))
+X_test = torch.load(os.path.join(filePath,"X_test.pt"))
+y_train = torch.load(os.path.join(filePath,"y_train.pt"))
+y_test = torch.load(os.path.join(filePath,"y_test.pt"))
 
 dataset = Dataset.Dataset(X_train, y_train)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
@@ -34,20 +39,20 @@ NN.to(device)
 #TODO maybe set these as default values in constructor
 
 optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.05) #TODO ask about lr
-torch.optim.lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.1, last_epoch=-1, verbose=False)
+torch.optim.lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.1, last_epoch=-1)
 cost_func = nn.BCELoss()
 
 for i in range (epochs):
     for j, (X,y) in enumerate(data_loader):
         X = X.to(device)
         y = y.to(device)
-        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(5) #reshaped to 5
+        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(batch_size) #reshaped to batchsize
         loss = cost_func(yhat, y)
         yhat = (yhat>threshold).float()
         acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
         
-        for pred,actual in zip(yhat,y):
-            conf_mat[actual,pred] += 1
+        for pred,actual in zip(yhat.tolist(),y.tolist()):
+            conf_mat[int(actual),int(pred)] += 1
         
         optimizer.zero_grad()
         loss.backward()
@@ -55,7 +60,7 @@ for i in range (epochs):
 
         losses.append(loss.data.item()) #was loss.data[0]
         accs.append(acc.data.item()) #was acc.data[0]
-        if j % 5 == 1:
+        if j % 15 == 14:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                  epochs, np.round(loss.data[0], 3), np.round(acc.data[0], 3)))
     precision.append((conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[0,1])))
@@ -85,7 +90,7 @@ plt.y_label("Score (%)")
 plt.savefig('./images/scores'+run_num+'.png')
 
 
-print('Confusion matrix:', '\n',conf_mat[0],'\n',conf_mat[1])
+torch.save('./images/scores.npy', conf_mat)
 
 torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/state_dict.pt')
 

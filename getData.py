@@ -10,7 +10,7 @@ import os
 import numpy as np #images come as numpy arrays; kept to be safe
 import cv2
 import torch
-#import torchvision
+import torchvision
 """
 File set-up: Have the 6 image folders in a single directory
 Pass the directory as the first argument to the preprocess function
