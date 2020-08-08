@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 
 epochs = 100 #what value should we set this
-batch_size = 15
+batch_size = 10
 threshold = 0.5
 run_num = 1
 losses = []
