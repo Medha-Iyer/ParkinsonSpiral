@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 
 epochs = 100 #what value should we set this
-batch_size = 3 #Remember to multiply by 5
+batch_size = 2
 threshold = 0.5
 run_num = 1
 losses = []
@@ -39,7 +39,6 @@ NN.to(device)
 #TODO maybe set these as default values in constructor
 
 optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.05) #TODO ask about lr
-optimizer.zero_grad()
 torch.optim.lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.1, last_epoch=-1)
 cost_func = nn.BCELoss()
 
@@ -54,12 +53,9 @@ for i in range (epochs):
         
         for pred,actual in zip(yhat.tolist(),y.tolist()):
             conf_mat[int(actual),int(pred)] += 1
-        
+        optimizer.zero_grad()
         loss.backward()
-        
-        if (j+1) % 5 == 0: #coding gradient accumulation
-            optimizer.step()
-            optimizer.zero_grad()
+        optimizer.step()
 
         losses.append(loss.data.item()) #was loss.data[0]
         accs.append(acc.data.item()) #was acc.data[0]

@@ -30,6 +30,7 @@ class SimpleConv(nn.Module):
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
       )
+      self.meander_nn = nn.DataParallel(self.meander_nn)
 
       self.spiral_nn = nn.Sequential(
           nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
@@ -46,6 +47,7 @@ class SimpleConv(nn.Module):
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
       )
+      self.spiral_nn = nn.DataParallel(self.spiral_nn)
 
       self.circle_nn = nn.Sequential(
           nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
@@ -62,6 +64,7 @@ class SimpleConv(nn.Module):
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
       )
+      self.circle_nn = nn.DataParallel(self.circle_nn)
       
       self.concat_nn = nn.Sequential(
           nn.Dropout(),
@@ -73,6 +76,7 @@ class SimpleConv(nn.Module):
           nn.Linear(4096, self.num_classes),
           nn.Sigmoid()
       )
+      self.concat_nn = nn.DataParallel(self.concat_nn)
 
 
   def forward(self, meanders, spirals, circles):
