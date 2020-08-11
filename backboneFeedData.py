@@ -54,8 +54,6 @@ for i in range(epochs):
         yhat = (yhat > threshold).float()
         acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
 
-        break
-
         for pred, actual in zip(yhat.tolist(), y.tolist()):
             conf_mat[int(actual), int(pred)] += 1
         optimizer.zero_grad()
@@ -67,37 +65,38 @@ for i in range(epochs):
         if (j + 1) % 10 == 0:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                      epochs, np.round(loss.data[0], 3), np.round(acc.data[0], 3)))
-    break
-#     precision.append((conf_mat[1, 1]) / ((conf_mat[1, 1]) + (conf_mat[0, 1])))
-#     recall.append((conf_mat[1, 1]) / ((conf_mat[1, 1]) + (conf_mat[1, 0])))
-#     f1.append(2 * ((precision * recall) / (precision + recall)))
-#
-# x = list(range(len(losses)))
-#
-# fig = plt.figure()
-# plt.plot(x, losses, color='r')
-# plt.x_label('Minibatches')
-# plt.y_label('Loss')
-# plt.savefig('./images/loss' + run_num + '.png')
-#
-# plt.plot(x, acc, color='g')
-# plt.y_label('Accuracy (dec)')
-# plt.savefig('./images/accuracy' + run_num + '.png')
-#
-# x = list(range(epochs))
-# plt.plot(x, precision, color='b', label='precision')
-# plt.plot(x, recall, color='r', label='recall')
-# plt.plot(x, f1, color='k', label='f1 score')
-#
-# plt.x_label("Epoch")
-# plt.y_label("Score (%)")
-# plt.savefig('./images/scores' + run_num + '.png')
-#
-# sns_plot = sns.heatmap(conf_mat / np.sum(conf_mat), annot=True,
-#                        fmt='.2%', cmap='Blues')
-# sns_plot.savefig('./images/conf_mat' + run_num + '.png')
-# torch.save('./images/scores.npy', conf_mat)
-#
-# torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/state_dict' + str(run_num) + '.pt')
-#
-#
+    temp_precision = (conf_mat[1, 1]) / ((conf_mat[1, 1]) + (conf_mat[0, 1]))
+    precision.append(temp_precision)
+    temp_recall = (conf_mat[1, 1]) / ((conf_mat[1, 1]) + (conf_mat[1, 0]))
+    recall.append(temp_recall)
+    f1.append(2 * ((temp_precision * temp_recall) / (temp_precision + temp_recall)))
+
+x = list(range(len(losses)))
+
+fig = plt.figure()
+plt.plot(x, losses, color='r')
+plt.x_label('Minibatches')
+plt.y_label('Loss')
+plt.savefig('./images/loss' + str(run_num) + '.png')
+
+plt.plot(x, acc, color='g')
+plt.y_label('Accuracy (dec)')
+plt.savefig('./images/accuracy' + str(run_num) + '.png')
+
+x = list(range(epochs))
+plt.plot(x, precision, color='b', label='precision')
+plt.plot(x, recall, color='r', label='recall')
+plt.plot(x, f1, color='k', label='f1 score')
+
+plt.x_label("Epoch")
+plt.y_label("Score (%)")
+plt.savefig('./images/scores' + str(run_num) + '.png')
+
+sns_plot = sns.heatmap(conf_mat / np.sum(conf_mat), annot=True,
+                       fmt='.2%', cmap='Blues')
+sns_plot.savefig('./images/conf_mat' + str(run_num) + '.png')
+torch.save('./images/scores.npy', conf_mat)
+
+torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/state_dict' + str(run_num) + '.pt')
+
+
