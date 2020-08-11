@@ -92,9 +92,6 @@ plt.x_label("Epoch")
 plt.y_label("Score (%)")
 plt.savefig('./images/scores'+run_num+'.png')
 
-sns_plot = sns.heatmap(conf_mat/np.sum(conf_mat), annot=True,
-            fmt='.2%', cmap='Blues')
-sns_plot.savefig('./images/conf_mat' +run_num+ '.png')
 torch.save('./images/scores.npy', conf_mat)
 
 torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/state_dict'+str(run_num)+'.pt')
