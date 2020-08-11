@@ -32,24 +32,23 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
 # train_spiral_loader = torch.DataLoader(train_spirals, batch_size)
 # train_circle_loader = torch.DataLoader(train_circles, batch_size)
 
+device = torch.device('cuda:0')
 
-device=torch.device('cuda:0')
-
-NN = SimpleConv(num_classes=1,size = (756,822)) #hardcoded for now
+NN = SimpleConv(num_classes=1, size=(756, 822))  # hardcoded for now
 NN.to(device)
 
+# TODO maybe set these as default values in constructor
 
 optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.05)  # TODO ask about lr
 torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1, last_epoch=-1)
 cost_func = nn.BCELoss()
 
-
-for i in range (epochs):
-    for j, (X,y) in enumerate(data_loader):
+for i in range(epochs):
+    for j, (X, y) in enumerate(data_loader):
         current_batch = y.shape[0]
         X = X.to(device)
         y = y.to(device)
-        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(current_batch) #reshaped to batchsize
+        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(current_batch)  # reshaped to batchsize
         loss = cost_func(yhat, y)
         yhat = (yhat > threshold).float()
         acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
@@ -59,45 +58,42 @@ for i in range (epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-        losses.append(loss.data.item()) #was loss.data[0]
-        accs.append(acc.data.item()) #was acc.data[0]
+        print('completed!')
+        losses.append(loss.data.item())  # was loss.data[0]
+        accs.append(acc.data.item())  # was acc.data[0]
         if j % 15 == 14:
             print("[{}/{}], loss: {} acc: {}".format(i,
-                                                 epochs, np.round(loss.data.item(), 3), np.round(acc.data.item(), 3)))
-    l_precision = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[0,1]))
+                                                     epochs, np.round(loss.data.item(), 3),
+                                                     np.round(acc.data.item(), 3)))
+    l_precision = (conf_mat[1, 1]) / ((conf_mat[1, 1]) + (conf_mat[0, 1]))
     precision.append(l_precision)
-    l_recall = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[1,0]))
+    l_recall = (conf_mat[1, 1]) / ((conf_mat[1, 1]) + (conf_mat[1, 0]))
     recall.append(l_recall)
-    f1.append(2* ((l_precision*l_recall)/(l_precision+l_recall)))
-
+    f1.append(2 * ((l_precision * l_recall) / (l_precision + l_recall)))
 
 x = list(range(len(losses)))
 
 fig = plt.figure()
-
-plt.plot(x,losses,color = 'r')
+plt.plot(x, losses, color='r')
 plt.xlabel('Minibatches')
 plt.ylabel('Loss')
-plt.savefig('/projectnb/riseprac/GroupB/Images/loss'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/loss' + str(run_num) + '.png')
 
-plt.plot(x,acc,color = 'g')
+plt.plot(x, acc, color='g')
 plt.xlabel('Minibatches')
 plt.ylabel('Accuracy (dec)')
-plt.savefig('/projectnb/riseprac/GroupB/Images/accuracy'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/accuracy' + str(run_num) + '.png')
 
 x = list(range(epochs))
-plt.plot(x,precision,color='b',label = 'precision')
-plt.plot(x,recall,color='r', label = 'recall')
-plt.plot(x,f1,color='k',label = 'f1 score')
+plt.plot(x, precision, color='b', label='precision')
+plt.plot(x, recall, color='r', label='recall')
+plt.plot(x, f1, color='k', label='f1 score')
 plt.legend()
 
 plt.xlabel("Epoch")
 plt.ylabel("Score (%)")
-plt.savefig('/projectnb/riseprac/GroupB/Images/scores'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/scores' + str(run_num) + '.png')
 
-sns_plot = sns.heatmap(conf_mat/np.sum(conf_mat), annot=True,
-            fmt='.2%', cmap='Blues')
-sns_plot.savefig('./images/conf_mat' + str(run_num)+ '.png')
+torch.save(conf_mat, '/projectnb/riseprac/GroupB/Images/scores' + str(run_num) + '.pt')
 
 torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/state_dict' + str(run_num) + '.pt')

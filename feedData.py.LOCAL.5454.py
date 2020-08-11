@@ -1,27 +1,15 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 10 22:31:40 2020
-
-@author: adamwasserman
-"""
-
-from circleArch import CircleConv
+from architecture import SimpleConv
 import Dataset
 import torch
 from torch import nn
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from statistics import mean
-import seaborn as sns
 
-epochs =  1000#remember for circles it's practically multiplied by 4
-batch_size = 10
+epochs = 100 #what value should we set this
+batch_size = 5
 threshold = 0.5
-run_num = 2
-temp_losses =[]
-temp_accs = []
+run_num = 1
 losses = []
 accs = []
 precision = []
@@ -32,10 +20,10 @@ conf_mat = torch.zeros(2,2)
 
 filePath = '/projectnb/riseprac/GroupB'
 
-X_train = torch.load(os.path.join(filePath,"X_trainB.pt"))
-X_test = torch.load(os.path.join(filePath,"X_testB.pt"))
-y_train = torch.load(os.path.join(filePath,"y_trainB.pt"))
-y_test = torch.load(os.path.join(filePath,"y_testB.pt"))
+X_train = torch.load(os.path.join(filePath,"X_train.pt"))
+X_test = torch.load(os.path.join(filePath,"X_test.pt"))
+y_train = torch.load(os.path.join(filePath,"y_train.pt"))
+y_test = torch.load(os.path.join(filePath,"y_test.pt"))
 
 dataset = Dataset.Dataset(X_train, y_train)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
@@ -45,21 +33,22 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
 # train_circle_loader = torch.DataLoader(train_circles, batch_size)
 
 device=torch.device('cuda:0')
-NN = CircleConv(num_classes=1,size = (756,822)) #hardcoded for now
+
+NN = SimpleConv(num_classes=1,size = (756,822)) #hardcoded for now
 NN.to(device)
 
 #TODO maybe set these as default values in constructor
 
-optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.01) #TODO ask about lr
-#torch.optim.lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.1, last_epoch=-1) #commented out the learning rate decay // also dropped lr to 0.01
+optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.05) #TODO ask about lr
+torch.optim.lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.1, last_epoch=-1)
 cost_func = nn.BCELoss()
 
-for i in range(epochs):
+for i in range (epochs):
     for j, (X,y) in enumerate(data_loader):
         current_batch = y.shape[0]
-        X = X[:,2].to(device)
+        X = X.to(device)
         y = y.to(device)
-        yhat = NN.forward(X).reshape(current_batch) #reshaped to batchsize
+        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(current_batch) #reshaped to batchsize
         loss = cost_func(yhat, y)
         yhat = (yhat>threshold).float()
         acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
@@ -69,16 +58,12 @@ for i in range(epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-        temp_losses.append(loss.data.item()) #was loss.data[0]
-        temp_accs.append(acc.data.item()) #was acc.data[0]
-        
+        print('completed!')
+        losses.append(loss.data.item()) #was loss.data[0]
+        accs.append(acc.data.item()) #was acc.data[0]
         if j % 15 == 14:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                  epochs, np.round(loss.data.item(), 3), np.round(acc.data.item(), 3)))
-    
-    losses.append(mean(temp_losses))
-    accs.append(mean(temp_accs))
     l_precision = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[0,1]))
     precision.append(l_precision)
     l_recall = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[1,0]))
@@ -92,12 +77,12 @@ fig = plt.figure()
 plt.plot(x,losses,color = 'r')
 plt.xlabel('Minibatches')
 plt.ylabel('Loss')
-plt.savefig('/projectnb/riseprac/GroupB/Images/CircleLoss'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/loss'+str(run_num)+'.png')
 
-plt.plot(x,accs,color = 'g')
+plt.plot(x,acc,color = 'g')
 plt.xlabel('Minibatches')
 plt.ylabel('Accuracy (dec)')
-plt.savefig('/projectnb/riseprac/GroupB/Images/CircleAccuracy'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/accuracy'+str(run_num)+'.png')
 
 x = list(range(epochs))
 plt.plot(x,precision,color='b',label = 'precision')
@@ -107,18 +92,11 @@ plt.legend()
 
 plt.xlabel("Epoch")
 plt.ylabel("Score (%)")
-plt.savefig('/projectnb/riseprac/GroupB/Images/CircleScores'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/scores'+str(run_num)+'.png')
 
 
-ns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
-            fmt='.2%', cmap='Blues')
-sns_plot.savefig('../Images/CircleConf_mat' +str(run_num)+ '.png')
+torch.save(conf_mat,'/projectnb/riseprac/GroupB/Images/scores'+str(run_num)+'.pt')
 
-print('Avg/final loss =',mean(losses),losses[-1])
-print('Avg/final accuracy =',mean(accs),accs[-1])
-print('Final precision =',precision[-1])
-print('Final recall =',recall[-1])
-print('Final f1 =',f1[-1])
+torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/state_dict'+str(run_num)+'.pt')
 
-
-torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/CircleState_dict'+str(run_num)+'.pt')
+    

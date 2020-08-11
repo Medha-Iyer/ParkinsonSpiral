@@ -87,13 +87,13 @@ class SimpleConv(nn.Module):
 
   def forward(self, meanders, spirals, circles):
       meanders = self.meander_nn(meanders)
-      meanders = meanders.view(meanders.size(0), -1).to(self.device4)
+      meanders = meanders.view(meanders.size(0), -1)
 
       spirals = self.spiral_nn(spirals)
-      spirals = spirals.view(spirals.size(0), -1).to(self.device4)
+      spirals = spirals.view(spirals.size(0), -1)
 
       circles = self.circle_nn(circles)
-      circles = circles.view(circles.size(0), -1).to(self.device4)
+      circles = circles.view(circles.size(0), -1)
 
       # now we can concatenate them
       combined = torch.cat((meanders, spirals, circles), dim=1)
