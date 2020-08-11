@@ -4,6 +4,7 @@ import torch
 from torch import nn
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import os
 
 epochs = 100  # what value should we set this
