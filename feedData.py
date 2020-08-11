@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 
 epochs = 100 #what value should we set this
-batch_size = 2
+batch_size = 5
 threshold = 0.5
 run_num = 1
 losses = []
@@ -32,9 +32,12 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
 # train_spiral_loader = torch.DataLoader(train_spirals, batch_size)
 # train_circle_loader = torch.DataLoader(train_circles, batch_size)
 
-device=torch.device('cuda:0')
+device1=torch.device('cuda:0')
+device2=torch.device('cuda:1')
+
+
 NN = SimpleConv(num_classes=1,size = (756,822)) #hardcoded for now
-NN.to(device)
+#NN.to(device)
 
 #TODO maybe set these as default values in constructor
 
@@ -44,9 +47,9 @@ cost_func = nn.BCELoss()
 
 for i in range (epochs):
     for j, (X,y) in enumerate(data_loader):
-        X = X.to(device)
-        y = y.to(device)
-        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(batch_size) #reshaped to batchsize
+        #X = X.to(device)
+        y = y.to(device2)
+        yhat = NN.forward(X[:, 0].to(device1), X[:, 1].to(device2), X[:, 2].to(device1)).reshape(batch_size) #reshaped to batchsize
         loss = cost_func(yhat, y)
         yhat = (yhat>threshold).float()
         acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
@@ -91,6 +94,6 @@ plt.savefig('./images/scores'+run_num+'.png')
 
 torch.save('./images/scores.npy', conf_mat)
 
-torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/state_dict.pt')
+torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/state_dict'+str(run_num)+'.pt')
 
     
