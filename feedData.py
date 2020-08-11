@@ -62,7 +62,7 @@ for i in range (epochs):
 
         losses.append(loss.data.item()) #was loss.data[0]
         accs.append(acc.data.item()) #was acc.data[0]
-        if j % 15 == 14:
+        if (j+1)%10 == 0:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                  epochs, np.round(loss.data[0], 3), np.round(acc.data[0], 3)))
     precision.append((conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[0,1])))
