@@ -14,8 +14,6 @@ class SimpleConv(nn.Module):
       self.dim = 0 #dimensions of image after concatenation (set in forward())
       self.size = size
       self.num_classes = num_classes
-      self.device1 = torch.device('cuda:0')
-      self.device2 = torch.device('cuda:1')
 
       self.meander_nn = nn.Sequential(
           nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
@@ -26,12 +24,14 @@ class SimpleConv(nn.Module):
           nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(192, 384, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
+          nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(384, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
+          nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(256, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
-      ).to(device1)
+      )
       #self.meander_nn = nn.DataParallel(self.meander_nn)
 
       self.spiral_nn = nn.Sequential(
@@ -43,12 +43,14 @@ class SimpleConv(nn.Module):
           nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(192, 384, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
+          nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(384, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
+          nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(256, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
-      ).to(device2)
+      )
       #self.spiral_nn = nn.DataParallel(self.spiral_nn)
 
       self.circle_nn = nn.Sequential(
@@ -60,36 +62,38 @@ class SimpleConv(nn.Module):
           nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(192, 384, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
+          nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(384, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
+          nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(256, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
-      ).to(device1)
+      )
       #self.circle_nn = nn.DataParallel(self.circle_nn)
       
       self.concat_nn = nn.Sequential(
           nn.Dropout(),
-          nn.Linear(405504, 4096),
+          nn.Linear(15360, 4096),
           nn.ReLU(inplace=True),
           nn.Dropout(p = 0.35),
           nn.Linear(4096, 4096),
           nn.ReLU(inplace=True),
           nn.Linear(4096, self.num_classes),
           nn.Sigmoid()
-      ).to(device2)
+      )
       #self.concat_nn = nn.DataParallel(self.concat_nn)
 
 
   def forward(self, meanders, spirals, circles):
       meanders = self.meander_nn(meanders)
-      meanders = meanders.view(meanders.size(0), -1).to(device2)
+      meanders = meanders.view(meanders.size(0), -1).to(self.device4)
 
       spirals = self.spiral_nn(spirals)
-      spirals = spirals.view(spirals.size(0), -1)
+      spirals = spirals.view(spirals.size(0), -1).to(self.device4)
 
       circles = self.circle_nn(circles)
-      circles = circles.view(circles.size(0), -1).to(device2)
+      circles = circles.view(circles.size(0), -1).to(self.device4)
 
       # now we can concatenate them
       combined = torch.cat((meanders, spirals, circles), dim=1)

@@ -33,7 +33,7 @@ def padWithWhite(img):
     bot = top if row_add % 2 == 0 else top + 1
     left = col_add//2
     right = left if col_add % 2 == 0 else left + 1
-    new_img = cv2.copyMakeBorder(img,top,bot,left,right,cv2.BORDER_CONSTANT, value = [255,255,255])
+    new_img = cv2.copyMakeBorder(img,top,bot,left,right,cv2.BORDER_CONSTANT, value = [0,0,0])
     return new_img
 
 def preprocess(inPath,outPath):
@@ -95,10 +95,10 @@ def preprocess(inPath,outPath):
     y_test,y_train = y[:52], y[52:]
      
      
-    torch.save(X_train,os.path.join(outPath,"X_train.pt"))
-    torch.save(X_test,os.path.join(outPath,"X_test.pt"))
-    torch.save(y_train,os.path.join(outPath,"y_train.pt"))
-    torch.save(y_test,os.path.join(outPath,"y_test.pt"))
+    torch.save(X_train,os.path.join(outPath,"X_trainB.pt"))
+    torch.save(X_test,os.path.join(outPath,"X_testB.pt"))
+    torch.save(y_train,os.path.join(outPath,"y_trainB.pt"))
+    torch.save(y_test,os.path.join(outPath,"y_testB.pt"))
 
 
 
