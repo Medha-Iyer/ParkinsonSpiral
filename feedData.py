@@ -24,6 +24,7 @@ def evaluate():
                 acc += 1.0 if pred == actual else 0.0
         test_acc.append(acc)
     test_accs.append(sum(test_acc)/47) #there are 47 test datapoints
+    print("Test accuracy of=",test_acc)
     if len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < -0.01:
         return breakout + 1
     elif len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < 0:
@@ -33,7 +34,7 @@ def evaluate():
         
 
 
-epochs = 1500  # what value should we set this
+epochs = 500  # what value should we set this
 batch_size = 10
 threshold = 0.5
 run_num = 1
@@ -114,7 +115,7 @@ for i in range (epochs):
     
     if (i+1) % 5 == 0:
         breakout = evaluate()
-        if breakout >= 5:
+        if breakout >= 3:
             print("Breakout triggered at epoch",i)
             break
     NN.train()
