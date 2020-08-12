@@ -77,7 +77,9 @@ for health in cat1:
             values.append(1.0 if health == "Patient" else 0.0)
 
 
-meanders,spirals,circles = torch.stack(meanders).type('torch.FloatTensor'),torch.stack(spirals).type('torch.FloatTensor'),torch.stack(circles).type('torch.FloatTensor')
+meanders = torch.stack(meanders).type('torch.FloatTensor')
+spirals = torch.stack(spirals).type('torch.FloatTensor')
+circles = torch.stack(circles).type('torch.FloatTensor')
 #NxRxCOLxC
 values = torch.tensor(values)
 meanders /= 255.0
