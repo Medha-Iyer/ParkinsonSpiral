@@ -1,5 +1,5 @@
 from architecture import SimpleConv
-import Dataset
+import CombDataset
 import torch
 from torch import nn
 import numpy as np
@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-epochs = 100  # what value should we set this
-batch_size = 5
+epochs = 600  # what value should we set this
+batch_size = 10
 threshold = 0.5
 run_num = 1
 losses = []
@@ -19,14 +19,15 @@ f1 = []
 
 conf_mat = torch.zeros(2, 2)
 
-filePath = '/projectnb/riseprac/GroupB'
+filePath = '/projectnb/riseprac/GroupB/preprocessedData'
 
-X_train = torch.load(os.path.join(filePath, "X_train.pt"))
-X_test = torch.load(os.path.join(filePath, "X_test.pt"))
+Xm = torch.load(os.path.join(filePath, "Xm_train.pt"))
+Xs = torch.load(os.path.join(filePath, "Xs_train.pt"))
+Xc = torch.load(os.path.join(filePath, "Xc_train.pt"))
 y_train = torch.load(os.path.join(filePath, "y_train.pt"))
-y_test = torch.load(os.path.join(filePath, "y_test.pt"))
 
-dataset = Dataset.Dataset(X_train, y_train)
+
+dataset = CombDataset.Dataset(Xm,Xs,Xc,y_train)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
 
 # train_meander_loader = torch.DataLoader(train_meanders, batch_size)
@@ -40,17 +41,16 @@ NN = SimpleConv(num_classes=1,size = (756,822)) #hardcoded for now
 NN.to(device)
 
 
-optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.05)  # TODO ask about lr
-torch.optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1, last_epoch=-1)
+optimizer = torch.optim.ASGD(params=NN.parameters())  # TODO ask about lr
 cost_func = nn.BCELoss()
 
 
 for i in range (epochs):
-    for j, (X,y) in enumerate(data_loader):
+    for j, (Xme,Xsp,Xci,y) in enumerate(data_loader):
         current_batch = y.shape[0]
-        X = X.to(device)
+        Xme,Xsp,Xci = Xme.to(device), Xsp.to(device), Xci.to(device)
         y = y.to(device)
-        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(current_batch) #reshaped to batchsize
+        yhat = NN.forward(Xme, Xsp, Xci).reshape(current_batch) #reshaped to batchsize
         loss = cost_func(yhat, y)
         yhat = (yhat > threshold).float()
         acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
@@ -78,14 +78,14 @@ x = list(range(len(losses)))
 fig = plt.figure()
 
 plt.plot(x,losses,color = 'r')
-plt.xlabel('Minibatches')
+plt.xlabel('Epochs')
 plt.ylabel('Loss')
-plt.savefig('/projectnb/riseprac/GroupB/Images/loss'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/MAINloss'+str(run_num)+'.png')
 
 plt.plot(x,acc,color = 'g')
-plt.xlabel('Minibatches')
+plt.xlabel('Epochs')
 plt.ylabel('Accuracy (dec)')
-plt.savefig('/projectnb/riseprac/GroupB/Images/accuracy'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/MAINaccuracy'+str(run_num)+'.png')
 
 x = list(range(epochs))
 plt.plot(x,precision,color='b',label = 'precision')
@@ -93,12 +93,13 @@ plt.plot(x,recall,color='r', label = 'recall')
 plt.plot(x,f1,color='k',label = 'f1 score')
 plt.legend()
 
-plt.xlabel("Epoch")
+plt.xlabel("Epochs")
 plt.ylabel("Score (%)")
-plt.savefig('/projectnb/riseprac/GroupB/Images/scores'+str(run_num)+'.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/MAINscores'+str(run_num)+'.png')
 
 sns_plot = sns.heatmap(conf_mat/np.sum(conf_mat), annot=True,
             fmt='.2%', cmap='Blues')
-sns_plot.savefig('./images/conf_mat' + str(run_num)+ '.png')
+conf_img = sns_plot.get_figure()    
+conf_img.savefig('/projectnb/riseprac/GroupB/Images/MAINconf_mat' + str(run_num)+ '.png')
 
-torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/state_dict' + str(run_num) + '.pt')
+torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/MAINstate_dict' + str(run_num) + '.pt')

@@ -21,7 +21,7 @@ class SimpleConv(nn.Module):
           nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(64, 192, kernel_size=5, padding=2),
           nn.ReLU(inplace=True),
-          nn.MaxPool2d(kernel_size=3, stride=2),
+          nn.MaxPool2d(kernel_size=3, stride=1),
           nn.Conv2d(192, 384, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
@@ -62,19 +62,21 @@ class SimpleConv(nn.Module):
           nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(192, 384, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
-          nn.MaxPool2d(kernel_size=3, stride=2),
+          nn.MaxPool2d(kernel_size=3, stride=1),
           nn.Conv2d(384, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
-          nn.MaxPool2d(kernel_size=3, stride=2),
+          nn.MaxPool2d(kernel_size=3, stride=1),
           nn.Conv2d(256, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
       )
       #self.circle_nn = nn.DataParallel(self.circle_nn)
       
+      #self.concat_nn = nn.DataParallel(self.concat_nn)
+      
       self.concat_nn = nn.Sequential(
           nn.Dropout(),
-          nn.Linear(15360, 4096),
+          nn.Linear(19712, 4096),
           nn.ReLU(inplace=True),
           nn.Dropout(p = 0.35),
           nn.Linear(4096, 4096),
@@ -82,8 +84,8 @@ class SimpleConv(nn.Module):
           nn.Linear(4096, self.num_classes),
           nn.Sigmoid()
       )
-      #self.concat_nn = nn.DataParallel(self.concat_nn)
 
+    
 
   def forward(self, meanders, spirals, circles):
       meanders = self.meander_nn(meanders)
@@ -97,7 +99,6 @@ class SimpleConv(nn.Module):
 
       # now we can concatenate them
       combined = torch.cat((meanders, spirals, circles), dim=1)
-      self.dim = combined.shape[1]
       out = self.concat_nn(combined)
 
       return out

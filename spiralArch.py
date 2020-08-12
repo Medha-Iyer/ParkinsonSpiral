@@ -24,8 +24,10 @@ class SpiralConv(nn.Module):
           nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(192, 384, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
+          nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(384, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
+          nn.MaxPool2d(kernel_size=3, stride=2),
           nn.Conv2d(256, 256, kernel_size=3, padding=1),
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
@@ -33,7 +35,7 @@ class SpiralConv(nn.Module):
       
       self.fc_nn = nn.Sequential(
           nn.Dropout(),
-          nn.Linear(135168, 4096),
+          nn.Linear(4096, 4096),
           nn.ReLU(inplace=True),
           nn.Dropout(p = 0.35),
           nn.Linear(4096, 4096),
@@ -41,7 +43,6 @@ class SpiralConv(nn.Module):
           nn.Linear(4096, self.num_classes),
           nn.Sigmoid()
       )
-
 
   def forward(self, spirals):
       spirals = self.spiral_nn(spirals)

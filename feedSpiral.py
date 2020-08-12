@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 10 22:31:40 2020
-
-@author: adamwasserman
-"""
-
 from spiralArch import SpiralConv
 import Dataset
 import torch
@@ -14,11 +6,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from statistics import mean
+import seaborn as sns
 
-epochs =  100#remember for circles it's practically multiplied by 4
-batch_size = 5
+epochs =  500#remember for circles it's practically multiplied by 4
+batch_size = 10
 threshold = 0.5
-run_num = 1
+run_num = 3
+temp_losses =[]
+temp_accs = []
 losses = []
 accs = []
 precision = []
@@ -27,12 +22,10 @@ f1 = []
 
 conf_mat = torch.zeros(2,2)
 
-filePath = '/projectnb/riseprac/GroupB'
+filePath = '/projectnb/riseprac/GroupB/preprocessedData'
 
-X_train = torch.load(os.path.join(filePath,"X_train.pt"))
-X_test = torch.load(os.path.join(filePath,"X_test.pt"))
+X_train = torch.load(os.path.join(filePath,"Xs_train.pt"))
 y_train = torch.load(os.path.join(filePath,"y_train.pt"))
-y_test = torch.load(os.path.join(filePath,"y_test.pt"))
 
 dataset = Dataset.Dataset(X_train, y_train)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
@@ -42,38 +35,39 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
 # train_circle_loader = torch.DataLoader(train_circles, batch_size)
 
 device=torch.device('cuda:0')
-NN = SpiralConv(num_classes=1,size = (756,822)) #hardcoded for now
+NN = SpiralConv(num_classes=1,size = (678,686)) #hardcoded for now
 NN.to(device)
 
 #TODO maybe set these as default values in constructor
 
-optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.05) #TODO ask about lr
-torch.optim.lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.1, last_epoch=-1)
+optimizer = torch.optim.ASGD(params=NN.parameters(), lr=0.01) #TODO ask about lr
+#torch.optim.lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.1, last_epoch=-1) #commented out the learning rate decay // also dropped lr to 0.01
 cost_func = nn.BCELoss()
 
 for i in range(epochs):
     for j, (X,y) in enumerate(data_loader):
         current_batch = y.shape[0]
-        X = X[:,1].to(device)
+        X = X.to(device)
         y = y.to(device)
         yhat = NN.forward(X).reshape(current_batch) #reshaped to batchsize
         loss = cost_func(yhat, y)
         yhat = (yhat>threshold).float()
         acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
-        
+
         for pred,actual in zip(yhat.tolist(),y.tolist()):
             conf_mat[int(actual),int(pred)] += 1
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        losses.append(loss.data.item()) #was loss.data[0]
-        accs.append(acc.data.item()) #was acc.data[0]
+        temp_losses.append(loss.data.item()) #was loss.data[0]
+        temp_accs.append(acc.data.item()) #was acc.data[0]
         
         if j % 15 == 14:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                  epochs, np.round(loss.data.item(), 3), np.round(acc.data.item(), 3)))
-    
+    losses.append(mean(temp_losses))
+    accs.append(mean(temp_accs))
     l_precision = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[0,1]))
     precision.append(l_precision)
     l_recall = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[1,0]))
@@ -105,13 +99,16 @@ plt.ylabel("Score (%)")
 plt.savefig('/projectnb/riseprac/GroupB/Images/SpiralScores'+str(run_num)+'.png')
 
 
-torch.save(conf_mat,'/projectnb/riseprac/GroupB/Images/Spiralconf_mat'+str(run_num)+'.pt')
+sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
+            fmt='.2%', cmap='Blues')
+conf_img = sns_plot.get_figure()    
+conf_img.savefig('/projectnb/riseprac/GroupB/Images/SPIRALconf_mat' + str(run_num)+ '.png')
 
 print('Avg/final loss =',mean(losses),losses[-1])
 print('Avg/final accuracy =',mean(accs),accs[-1])
-print('Avg/final precision =',mean(precision),precision[-1])
-print('Avg/final recall =',mean(recall),recall[-1])
-print('Avg/final f1 =',mean(f1),f1[-1])
+print('Final precision =',precision[-1])
+print('Final recall =',recall[-1])
+print('Final f1 =',f1[-1])
 
 
-torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/SpiralState_dict'+str(run_num)+'.pt')
+torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/SpiralCircleState_dict'+str(run_num)+'.pt')
