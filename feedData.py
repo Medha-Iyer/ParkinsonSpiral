@@ -12,8 +12,6 @@ epochs = 1500  # what value should we set this
 batch_size = 10
 threshold = 0.5
 run_num = 1
-temp_accs = []
-temp_losses = []
 losses = []
 accs = []
 precision = []
@@ -49,6 +47,8 @@ cost_func = nn.BCELoss()
 
 
 for i in range (epochs):
+    temp_accs = []
+    temp_losses = []
     for j, (Xme,Xsp,Xci,y) in enumerate(data_loader):
         current_batch = y.shape[0]
         Xme,Xsp,Xci = Xme.to(device), Xsp.to(device), Xci.to(device)

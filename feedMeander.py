@@ -53,6 +53,8 @@ optimizer = torch.optim.ASGD(params=NN.parameters(), lr=0.01) #TODO ask about lr
 cost_func = nn.BCELoss()
 
 for i in range(epochs):
+    temp_accs = []
+    temp_losses = []
     for j, (X,y) in enumerate(data_loader):
         current_batch = y.shape[0]
         X = X.to(device)
