@@ -10,7 +10,6 @@ import os
 import numpy as np #images come as numpy arrays; kept to be safe
 import cv2
 import torch
-import torchvision
 """
 File set-up: Have the 6 image folders in a single directory
 Pass the directory as the first argument to the preprocess function
@@ -21,84 +20,91 @@ Naming should be in camel-case (no plural!)
 EX: HealthySpiral
 """
 #The data below represents the largest row and column size for each category
-dimensions = {"Meander": (744,822), "Spiral":(756,786),"Circle":(675,720)} # no longer used
+#dimensions = {"Meander": (744,822), "Spiral":(756,786),"Circle":(675,720)} # no longer used
 
 
+dim= {"Meanders": (561,580), "Spiral" : (678,686), "Circle" : (238,211)}
 
 
-def padWithWhite(img):
-    row_add = 756 - img.shape[0]
-    col_add = 822 - img.shape[1]
-    top = row_add//2
-    bot = top if row_add % 2 == 0 else top + 1
-    left = col_add//2
-    right = left if col_add % 2 == 0 else left + 1
-    new_img = cv2.copyMakeBorder(img,top,bot,left,right,cv2.BORDER_CONSTANT, value = [0,0,0])
-    return new_img
+#def preprocess(inPath,outPath):
+"""Uploads data into a numpy array
+    parameter: filePath – the path to the Image_Data folder
+    returns: a tuple containing a numpy array of the data and an vertical vector
+    with the corresponding values
+"""
+outPath = '/projectnb/riseprac/GroupB/processedData'
 
-def preprocess(inPath,outPath):
-    """Uploads data into a numpy array
-        parameter: filePath – the path to the Image_Data folder
-        returns: a tuple containing a numpy array of the data and an vertical vector
-        with the corresponding values
-    """
-    
-    data = []
-    values = [] # 1 for PD and 0 for Healthy
-    
-    DATADIR = inPath
-    cat1 = ["Healthy","Patient"]
-    cat2 = ["Meander","Spiral"]
-    for health in cat1:
-        tag = "H" if health == 'Healthy' else "P"
-        size = 38 if health == "Healthy" else 32
-        for subject in range(1,size+1):
-            for i in range (1,5):
-                delete = False
-                temp = []
-                for shape in cat2:
-                    abrev = 'mea' if shape == 'Meander' else 'sp'
-            
-                    path = os.path.join(DATADIR,health+shape)
-                    img_name = abrev + str(i) + '-' + tag+str(subject)+'.jpg'
-                    img_array = cv2.imread(os.path.join(path,img_name))
-                    
-                    if img_array is None: # look for missing data
-                        delete = True
-                    else: #can only perform if img_array isn't None
-                        img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
-                        temp.append(torch.from_numpy(padWithWhite(img_array)))
-                        
-                path = os.path.join(DATADIR,health+"Circle")
-                img_name = "circA-P"+str(subject)+".jpg"
-                img_array = cv2.imread(os.path.join(path,img_name),cv2.COLOR_BGR2RGB)
+meanders = []
+spirals = []
+circles = []
+values = [] # 1 for PD and 0 for Healthy
+
+DATADIR = '/Users/adamwasserman/Documents/Image_Data'
+cat1 = ["Healthy","Patient"]
+cat2 = ["Meander","Spiral"]
+for health in cat1:
+    tag = "H" if health == 'Healthy' else "P"
+    size = 38 if health == "Healthy" else 32
+    for subject in range(1,size+1):
+        for i in range (1,5):
+            delete = False
+            temp = []
+            for shape in cat2:
+                abrev = 'mea' if shape == 'Meander' else 'sp'
+        
+                path = os.path.join(DATADIR,health+shape)
+                img_name = abrev + str(i) + '-' + tag+str(subject)+'.jpg'
+                img_array = cv2.imread(os.path.join(path,img_name))
                 
-                if img_array is None or delete == True: # datapoints with missing data
-                    temp.clear()
-                    continue
-                img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
-                temp.append(torch.from_numpy(padWithWhite(img_array)))#hard-coded for now
-                data.append(torch.stack(temp))
-                values.append(1.0 if health == "Patient" else 0.0)
-    
-    
-    data = torch.stack(data)
-    values = torch.tensor(values)
-    data = data.type('torch.FloatTensor')
-    data /= 255.0
-    data = data.permute(0,1,4,2,3)
-    shuffle_index = torch.randperm(259)
-    
-    X,y= data[shuffle_index], values[shuffle_index]
+                if img_array is None: # look for missing data
+                    delete = True
+                else: #can only perform if img_array isn't None
+                    img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
+                    temp.append(torch.from_numpy(cv2.resize(img_array,dim[shape])))
+                    
+            path = os.path.join(DATADIR,health+"Circle")
+            img_name = "circA-P"+str(subject)+".jpg"
+            img_array = cv2.imread(os.path.join(path,img_name),cv2.COLOR_BGR2RGB)
+            
+            if img_array is None or delete == True: # datapoints with missing data
+                temp.clear()
+                continue
+            img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
+            temp.append(torch.from_numpy(cv2.resize(img_array,dim["Circle"])))#hard-coded for now
+            meanders.append(temp[0])
+            spirals.append(temp[1])
+            circles.append(temp[2])
+            values.append(1.0 if health == "Patient" else 0.0)
 
-    X_test,X_train = X[:52], X[52:]
-    y_test,y_train = y[:52], y[52:]
-     
-     
-    torch.save(X_train,os.path.join(outPath,"X_trainB.pt"))
-    torch.save(X_test,os.path.join(outPath,"X_testB.pt"))
-    torch.save(y_train,os.path.join(outPath,"y_trainB.pt"))
-    torch.save(y_test,os.path.join(outPath,"y_testB.pt"))
+
+meanders,spirals,circles = torch.stack(meanders).type('torch.FloatTensor'),torch.stack(spirals).type('torch.FloatTensor'),torch.stack(circles).type('torch.FloatTensor')
+#NxRxCOLxC
+values = torch.tensor(values)
+meanders /= 255.0
+spirals /= 255.0
+circles /= 255.0
+meanders,spirals,circles = meanders.permute(0,3,1,2), spirals.permute(0,3,1,2), circles.permute(0,3,1,2)
+shuffle_index = torch.randperm(259)
+
+Xm, Xs, Xc= meanders[shuffle_index], spirals[shuffle_index], circles[shuffle_index]
+y = values[shuffle_index]
+
+
+Xm_train,Xs_train,Xc_train = Xm[52:], Xs[52:], Xc[52:]
+Xm_test,Xs_test,Xc_test = Xm[:52], Xs[:52], Xc[:52]
+
+
+y_test,y_train = y[:52], y[52:]
+ 
+ 
+torch.save(Xm_train,os.path.join(outPath,"Xm_train.pt"))
+torch.save(Xs_train,os.path.join(outPath,"Xs_train.pt"))
+torch.save(Xc_train,os.path.join(outPath,"Xc_train.pt"))
+torch.save(Xm_test,os.path.join(outPath,"Xm_test.pt"))
+torch.save(Xs_test,os.path.join(outPath,"Xs_test.pt"))
+torch.save(Xc_test,os.path.join(outPath,"Xc_test.pt"))
+torch.save(y_train,os.path.join(outPath,"y_train.pt"))
+torch.save(y_test,os.path.join(outPath,"y_test.pt"))
 
 
 
@@ -111,4 +117,4 @@ def getData(filePath):
     y_test = torch.load(os.path.join(filePath,"y_test.pt"))
     return X_train,X_test,y_train,y_test
     
-preprocess('/projectnb/riseprac/GroupB','/projectnb/riseprac/GroupB')
+#preprocess('/projectnb/riseprac/GroupB','/projectnb/riseprac/GroupB')
