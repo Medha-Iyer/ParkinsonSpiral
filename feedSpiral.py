@@ -8,10 +8,10 @@ import os
 from statistics import mean
 import seaborn as sns
 
-epochs =  500#remember for circles it's practically multiplied by 4
+epochs =  1000#remember for circles it's practically multiplied by 4
 batch_size = 10
 threshold = 0.5
-run_num = 3
+run_num = 4
 temp_losses =[]
 temp_accs = []
 losses = []
