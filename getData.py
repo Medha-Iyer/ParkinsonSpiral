@@ -40,11 +40,6 @@ spirals = []
 circles = []
 values = [] # 1 for PD and 0 for Healthy
 
-p_meanders = []
-p_spirals = []
-p_circles = []
-p_values = []
-
 DATADIR = '/projectnb/riseprac/GroupB'
 cat1 = ["Healthy","Patient"]
 cat2 = ["Meander","Spiral"]
@@ -52,7 +47,10 @@ for health in cat1:
     tag = "H" if health == 'Healthy' else "P"
     size = 38 if health == "Healthy" else 32
     for subject in range(1,size+1):
-        
+        pat_meanders = []
+        pat_spirals = []
+        pat_circles = []
+        pat_values = []
         for i in range (1,5):
             delete = False
             temp = []
@@ -78,19 +76,14 @@ for health in cat1:
                 continue
             img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
             temp.append(torch.from_numpy(cv2.resize(img_array,dim["Circle"])))#hard-coded for now
-            
-            p_meanders.append(np.copy(temp[0]))
-            p_spirals.append(np.copy(temp[1]))
-            p_circles.append(np.copy(temp[2]))
-            p_values.append(1.0 if health == "Patient" else 0.0)
-        meanders.append(p_meanders)
-        p_meanders.clear()
-        spirals.append(p_spirals)
-        p_spirals.clear()
-        circles.append(p_circles)
-        p_circles.clear()
-        values.append(p_values)
-        p_values.clear()
+            pat_meanders.append(temp[0])
+            pat_spirals.append(temp[1])
+            pat_circles.append(temp[2])
+            pat_values.append(1.0 if health == "Patient" else 0.0)
+        meanders.append(pat_meanders)
+        spirals.append(pat_spirals)
+        circles.append(pat_circles)
+        values.append(pat_values)
 
 #shuffle lists in unison
 
