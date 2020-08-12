@@ -102,7 +102,7 @@ plt.xlabel("Epochs")
 plt.ylabel("Score (%)")
 plt.savefig('/projectnb/riseprac/GroupB/Images/MAINscores'+str(run_num)+'.png')
 
-sns_plot = sns.heatmap(conf_mat/sum(conf_mat), annot=True,
+sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
             fmt='.2%', cmap='Blues')
 conf_img = sns_plot.get_figure()    
 conf_img.savefig('/projectnb/riseprac/GroupB/Images/MAINconf_mat' + str(run_num)+ '.png')

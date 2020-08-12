@@ -83,12 +83,14 @@ plt.xlabel('Minibatches')
 plt.ylabel('Loss')
 plt.savefig('/projectnb/riseprac/GroupB/Images/SpiralLoss'+str(run_num)+'.png')
 
+fig = plt.figure()
 plt.plot(x,accs,color = 'g')
 plt.xlabel('Minibatches')
 plt.ylabel('Accuracy (dec)')
 plt.savefig('/projectnb/riseprac/GroupB/Images/SpiralAccuracy'+str(run_num)+'.png')
 
 x = list(range(epochs))
+fig = plt.figure()
 plt.plot(x,precision,color='b',label = 'precision')
 plt.plot(x,recall,color='r', label = 'recall')
 plt.plot(x,f1,color='k',label = 'f1 score')
@@ -99,6 +101,7 @@ plt.ylabel("Score (%)")
 plt.savefig('/projectnb/riseprac/GroupB/Images/SpiralScores'+str(run_num)+'.png')
 
 
+fig = plt.figure()
 sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
             fmt='.2%', cmap='Blues')
 conf_img = sns_plot.get_figure()    
