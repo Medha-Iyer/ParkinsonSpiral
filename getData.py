@@ -100,14 +100,14 @@ Xm_train,Xs_train,Xc_train,y_train = meanders[13:], spirals[13:], circles[13:],v
 Xm_test,Xs_test,Xc_test,y_test = meanders[:13], spirals[:13], circles[:13],values[:13]
 
 #remove the extra 'dimension' in each list
-Xm_train = [*sublist for sublist in Xm_train]
-Xs_train = [*sublist for sublist in Xs_train]
-Xc_train = [*sublist for sublist in Xc_train]
-Xm_test = [*sublist for sublist in Xm_test]
-Xs_test = [*sublist for sublist in Xs_test]
-Xc_test = [*sublist for sublist in Xc_test]
-y_train = [*sublist for sublist in y_train]
-y_test = [*sublist for sublist in y_test]
+Xm_train = [j for sublist in Xm_train for j in sublist]
+Xs_train = [j for sublist in Xs_train for j in sublist]
+Xc_train = [j for sublist in Xc_train for j in sublist]
+Xm_test = [j for sublist in Xm_test for j in sublist]
+Xs_test = [j for sublist in Xs_test for j in sublist]
+Xc_test = [j for sublist in Xc_test for j in sublist]
+y_train = [j for sublist in y_train for j in sublist]
+y_test = [j for sublist in y_test for j in sublist]
 
 #create tensors
 
