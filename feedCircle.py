@@ -16,7 +16,7 @@ import os
 from statistics import mean
 import seaborn as sns
 
-epochs =  200#remember for circles it's practically multiplied by 4
+epochs =  500#remember for circles it's practically multiplied by 4
 batch_size = 10
 threshold = 0.5
 run_num = 3
@@ -30,12 +30,12 @@ f1 = []
 
 conf_mat = torch.zeros(2,2)
 
-filePath = '/projectnb/riseprac/GroupB'
+filePath = '/projectnb/riseprac/GroupB/preprocessedData'
 
-X_train = torch.load(os.path.join(filePath,"X_trainB.pt"))
-X_test = torch.load(os.path.join(filePath,"X_testB.pt"))
-y_train = torch.load(os.path.join(filePath,"y_trainB.pt"))
-y_test = torch.load(os.path.join(filePath,"y_testB.pt"))
+X_train = torch.load(os.path.join(filePath,"Xc_train.pt"))
+X_test = torch.load(os.path.join(filePath,"Xc_test.pt"))
+y_train = torch.load(os.path.join(filePath,"y_train.pt"))
+y_test = torch.load(os.path.join(filePath,"y_test.pt"))
 
 dataset = Dataset.Dataset(X_train, y_train)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
@@ -45,19 +45,19 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
 # train_circle_loader = torch.DataLoader(train_circles, batch_size)
 
 device=torch.device('cuda:0')
-NN = CircleConv(num_classes=1,size = (756,822)) #hardcoded for now
+NN = CircleConv(num_classes=1,size = (238,211)) #hardcoded for now
 NN.to(device)
 
 #TODO maybe set these as default values in constructor
 
-optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.01) #TODO ask about lr
+optimizer = torch.optim.ASGD(params=NN.parameters(), lr=0.01) #TODO ask about lr
 #torch.optim.lr_scheduler.StepLR(optimizer, step_size = 10, gamma=0.1, last_epoch=-1) #commented out the learning rate decay // also dropped lr to 0.01
 cost_func = nn.BCELoss()
 
 for i in range(epochs):
     for j, (X,y) in enumerate(data_loader):
         current_batch = y.shape[0]
-        X = X[:,2].to(device)
+        X = X.to(device)
         y = y.to(device)
         yhat = NN.forward(X).reshape(current_batch) #reshaped to batchsize
         loss = cost_func(yhat, y)
@@ -111,7 +111,8 @@ plt.savefig('/projectnb/riseprac/GroupB/Images/CircleScores'+str(run_num)+'.png'
 
 sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
             fmt='.2%', cmap='Blues')
-sns_plot.savefig('../Images/CircleConf_mat' +str(run_num)+ '.png')
+conf_img = sns_plot.get_figure()    
+conf_img.savefig('./images/conf_mat' + str(run_num)+ '.png')
 
 print('Avg/final loss =',mean(losses),losses[-1])
 print('Avg/final accuracy =',mean(accs),accs[-1])
