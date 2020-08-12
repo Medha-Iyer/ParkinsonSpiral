@@ -33,7 +33,7 @@ dim= {"Meander": (561,580), "Spiral" : (678,686), "Circle" : (238,211)}
     returns: a tuple containing a numpy array of the data and an vertical vector
     with the corresponding values
 """
-outPath = '/projectnb/riseprac/GroupB/processedData'
+outPath = '/projectnb/riseprac/GroupB/preprocessedData'
 
 meanders = []
 spirals = []
@@ -113,8 +113,8 @@ Xc_train = torch.stack(Xc_train).type('torch.FloatTensor')
 Xm_test = torch.stack(Xm_test).type('torch.FloatTensor')
 Xs_test = torch.stack(Xs_test).type('torch.FloatTensor')
 Xc_test = torch.stack(Xc_test).type('torch.FloatTensor')
-y_train = torch.stack(y_train).type('torch.FloatTensor')
-y_test = torch.stack(y_test).type('torch.FloatTensor')
+y_train = torch.tensor(y_train).type('torch.FloatTensor')
+y_test = torch.tensor(y_test).type('torch.FloatTensor')
 #shape: NxRxCOLxC
 
 #normalize data
