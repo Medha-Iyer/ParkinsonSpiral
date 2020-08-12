@@ -113,8 +113,8 @@ Xc_train = torch.stack(Xc_train).type('torch.FloatTensor')
 Xm_test = torch.stack(Xm_test).type('torch.FloatTensor')
 Xs_test = torch.stack(Xs_test).type('torch.FloatTensor')
 Xc_test = torch.stack(Xc_test).type('torch.FloatTensor')
-y_train = torch.stack(y_train).type('torch.FloatTensor')
-y_test = torch.stack(y_test).type('torch.FloatTensor')
+y_train = torch.tensor(y_train).type('torch.FloatTensor')
+y_test = torch.tensor(y_test).type('torch.FloatTensor')
 #shape: NxRxCOLxC
 
 #normalize data
@@ -125,8 +125,6 @@ Xc_train /= 255.0
 Xm_test /= 255.0
 Xs_test /= 255.0
 Xc_test /= 255.0
-y_train /= 255.0
-y_test /= 255.0
 
 
 #Rearrange dimensions so order = NxChannelxRowxCol
