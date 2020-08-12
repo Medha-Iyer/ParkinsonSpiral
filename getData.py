@@ -10,6 +10,7 @@ import os
 import numpy as np #images come as numpy arrays; kept to be safe
 import cv2
 import torch
+import random
 """
 File set-up: Have the 6 image folders in a single directory
 Pass the directory as the first argument to the preprocess function
@@ -46,6 +47,10 @@ for health in cat1:
     tag = "H" if health == 'Healthy' else "P"
     size = 38 if health == "Healthy" else 32
     for subject in range(1,size+1):
+        p_meanders = []
+        p_spirals = []
+        p_circles = []
+        p_values = []
         for i in range (1,5):
             delete = False
             temp = []
@@ -71,33 +76,67 @@ for health in cat1:
                 continue
             img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
             temp.append(torch.from_numpy(cv2.resize(img_array,dim["Circle"])))#hard-coded for now
-            meanders.append(temp[0])
-            spirals.append(temp[1])
-            circles.append(temp[2])
-            values.append(1.0 if health == "Patient" else 0.0)
+            p_meanders.append(temp[0])
+            p_spirals.append(temp[1])
+            p_circles.append(temp[2])
+            p_values.append(1.0 if health == "Patient" else 0.0)
+        meanders.append(p_meanders)
+        p_meanders.clear()
+        spirals.append(p_spirals)
+        p_spirals.clear()
+        circles.append(p_circles)
+        p_circles.clear()
+        values.append(p_values)
+        p_values.clear()
+
+#shuffle lists in unison
+
+comb = zip(meanders,spirals,circles,values)
+random.shuffle(comb)
+meanders,spirals,circles,values, = zip(*comb)
+
+#split the list along the patient dimension
+Xm_train,Xs_train,Xc_train,y_train = meanders[13:], spirals[13:], circles[13:],values[13:]
+Xm_test,Xs_test,Xc_test,y_test = meanders[:13], spirals[:13], circles[:13],values[:13]
+
+#remove the extra 'dimension' in each list
+Xm_train = [*sublist for sublist in Xm_train]
+Xs_train = [*sublist for sublist in Xs_train]
+Xc_train = [*sublist for sublist in Xc_train]
+Xm_test = [*sublist for sublist in Xm_test]
+Xs_test = [*sublist for sublist in Xs_test]
+Xc_test = [*sublist for sublist in Xc_test]
+y_train = [*sublist for sublist in y_train]
+y_test = [*sublist for sublist in y_test]
+
+#create tensors
+
+Xm_train = torch.stack(Xm_train).type('torch.FloatTensor')
+Xs_train = torch.stack(Xs_train).type('torch.FloatTensor')
+Xc_train = torch.stack(Xc_train).type('torch.FloatTensor')
+Xm_test = torch.stack(Xm_test).type('torch.FloatTensor')
+Xs_test = torch.stack(Xs_test).type('torch.FloatTensor')
+Xc_test = torch.stack(Xc_test).type('torch.FloatTensor')
+y_train = torch.stack(y_train).type('torch.FloatTensor')
+y_test = torch.stack(y_test).type('torch.FloatTensor')
+#shape: NxRxCOLxC
+
+#normalize data
+
+Xm_train /= 255.0
+Xs_train /= 255.0
+Xc_train /= 255.0
+Xm_test /= 255.0
+Xs_test /= 255.0
+Xc_test /= 255.0
+y_train /= 255.0
+y_test /= 255.0
 
 
-meanders = torch.stack(meanders).type('torch.FloatTensor')
-spirals = torch.stack(spirals).type('torch.FloatTensor')
-circles = torch.stack(circles).type('torch.FloatTensor')
-#NxRxCOLxC
-values = torch.tensor(values)
-meanders /= 255.0
-spirals /= 255.0
-circles /= 255.0
-meanders,spirals,circles = meanders.permute(0,3,1,2), spirals.permute(0,3,1,2), circles.permute(0,3,1,2)
-shuffle_index = torch.randperm(259)
+#Rearrange dimensions so order = NxChannelxRowxCol
+Xm_train,Xs_train,Xc_train = Xm_train.permute(0,3,1,2), Xs_train.permute(0,3,1,2), Xc_train.permute(0,3,1,2)
+Xm_test,Xs_test,Xc_test = Xm_test.permute(0,3,1,2), Xs_test.permute(0,3,1,2), Xc_test.permute(0,3,1,2)
 
-Xm, Xs, Xc= meanders[shuffle_index], spirals[shuffle_index], circles[shuffle_index]
-y = values[shuffle_index]
-
-
-Xm_train,Xs_train,Xc_train = Xm[52:], Xs[52:], Xc[52:]
-Xm_test,Xs_test,Xc_test = Xm[:52], Xs[:52], Xc[:52]
-
-
-y_test,y_train = y[:52], y[52:]
- 
  
 torch.save(Xm_train,os.path.join(outPath,"Xm_train.pt"))
 torch.save(Xs_train,os.path.join(outPath,"Xs_train.pt"))
