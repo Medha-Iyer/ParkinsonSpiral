@@ -23,7 +23,7 @@ EX: HealthySpiral
 #dimensions = {"Meander": (744,822), "Spiral":(756,786),"Circle":(675,720)} # no longer used
 
 
-dim= {"Meanders": (561,580), "Spiral" : (678,686), "Circle" : (238,211)}
+dim= {"Meander": (561,580), "Spiral" : (678,686), "Circle" : (238,211)}
 
 
 #def preprocess(inPath,outPath):
