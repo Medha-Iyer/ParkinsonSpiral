@@ -8,13 +8,13 @@ Created on Tue Aug 11 22:29:35 2020
 
 import matplotlib.pyplot as plt
 import torch
-from circleArch import CircleConv
+from meanderArch import MeanderConv
 import seaborn as sns
 from statistics import mean
 import Dataset
 import numpy as np
 
-X_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/Xc_test.pt')
+X_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/Xm_test.pt')
 y_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/y_test.pt')
 
 dataset = Dataset.Dataset(X_test, y_test)
@@ -27,8 +27,8 @@ recall = []
 f1 = []
 
 device=torch.device('cuda:0')
-NN = CircleConv(num_classes=1,size = (238,211)) #hardcoded for now
-NN.load_state_dict(torch.load('/projectnb/riseprac/GroupB/CircleState_dict3.pt'))
+NN = MeanderConv(num_classes=1,size = (238,211)) #hardcoded for now
+NN.load_state_dict(torch.load('/projectnb/riseprac/GroupB/MeanderState_dict3.pt'))
 NN.eval()
 NN.to(device)
 
@@ -60,7 +60,7 @@ fig = plt.figure()
 plt.plot(x,accs,color = 'g')
 plt.xlabel('Batches')
 plt.ylabel('Accuracy (dec)')
-plt.savefig('/projectnb/riseprac/GroupB/Images/CircleAccuracyFINAL.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/MeanderAccuracyFINAL.png')
 
 fig = plt.figure()
 plt.plot(x,precision,color='b',label = 'precision')
@@ -70,14 +70,14 @@ plt.legend()
 
 plt.xlabel("Epoch")
 plt.ylabel("Score (%)")
-plt.savefig('/projectnb/riseprac/GroupB/Images/CircleScoresFINAL.png')
+plt.savefig('/projectnb/riseprac/GroupB/Images/MeanderScoresFINAL.png')
 
 fig = plt.figure()
 labels = ['True Neg','False Pos','False Neg','True Pos']
 labels = np.asarray(labels).reshape(2,2)
 sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=labels, fmt='.2%', cmap='Blues')
 conf_img = sns_plot.get_figure()    
-conf_img.savefig('/projectnb/riseprac/GroupB/Images/CircleConf_mat.png')
+conf_img.savefig('/projectnb/riseprac/GroupB/Images/MeanderConf_mat.png')
 
 print('Accuracy =',mean(accs))
 print('Final precision =',precision[-1])
