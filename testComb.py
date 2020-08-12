@@ -77,7 +77,7 @@ plt.savefig('/projectnb/riseprac/GroupB/Images/CombScoresFINAL.png')
 fig = plt.figure()
 labels = ['True Neg','False Pos','False Neg','True Pos']
 labels = np.asarray(labels).reshape(2,2)
-sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=labels, fmt='.2%', cmap='Blues')
+sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=labels, fmt='.2', cmap='Blues')
 conf_img = sns_plot.get_figure()    
 conf_img.savefig('/projectnb/riseprac/GroupB/Images/CombConf_mat.png')
 

@@ -90,6 +90,8 @@ for health in cat1:
 comb = list(zip(meanders,spirals,circles,values))
 random.shuffle(comb)
 meanders,spirals,circles,values, = zip(*comb)
+# [(m1,sp1,ci1,y),(m2,sp2,ci2,y2),..]
+# m1,sp1,ci1,y,m2,sp2,ci2,y2
 
 #split the list along the patient dimension
 Xm_train,Xs_train,Xc_train,y_train = meanders[13:], spirals[13:], circles[13:],values[13:]
