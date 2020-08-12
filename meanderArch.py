@@ -35,7 +35,7 @@ class MeanderConv(nn.Module):
       
       self.fc_nn = nn.Sequential(
           nn.Dropout(),
-          nn.Linear(135168, 4096),
+          nn.Linear(12544, 4096),
           nn.ReLU(inplace=True),
           nn.Dropout(p = 0.35),
           nn.Linear(4096, 4096),
@@ -48,7 +48,6 @@ class MeanderConv(nn.Module):
   def forward(self, meanders):
       meanders = self.meander_nn(meanders)
       meanders = meanders.view(meanders.size(0), -1)
-
       # now we can concatenate them
       out = self.fc_nn(meanders)
       

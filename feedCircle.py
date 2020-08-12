@@ -19,7 +19,7 @@ import seaborn as sns
 epochs =  500#remember for circles it's practically multiplied by 4
 batch_size = 10
 threshold = 0.5
-run_num = 3
+run_num = 4
 temp_losses =[]
 temp_accs = []
 losses = []
@@ -112,7 +112,7 @@ plt.savefig('/projectnb/riseprac/GroupB/Images/CircleScores'+str(run_num)+'.png'
 sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
             fmt='.2%', cmap='Blues')
 conf_img = sns_plot.get_figure()    
-conf_img.savefig('./images/conf_mat' + str(run_num)+ '.png')
+conf_img.savefig('/projectnb/riseprac/GroupB/Images/CIRCLEconf_mat' + str(run_num)+ '.png')
 
 print('Avg/final loss =',mean(losses),losses[-1])
 print('Avg/final accuracy =',mean(accs),accs[-1])

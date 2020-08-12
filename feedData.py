@@ -6,11 +6,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+from statistics import mean
 
-epochs = 600  # what value should we set this
+epochs = 1500  # what value should we set this
 batch_size = 10
 threshold = 0.5
 run_num = 1
+temp_accs = []
+temp_losses = []
 losses = []
 accs = []
 precision = []
@@ -61,11 +64,13 @@ for i in range (epochs):
         loss.backward()
         optimizer.step()
 
-        losses.append(loss.data.item()) #was loss.data[0]
-        accs.append(acc.data.item()) #was acc.data[0]
+        temp_losses.append(loss.data.item()) #was loss.data[0]
+        temp_accs.append(acc.data.item()) #was acc.data[0]
         if j % 15 == 14:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                  epochs, np.round(loss.data.item(), 3), np.round(acc.data.item(), 3)))
+    losses.append(mean(temp_losses))
+    accs.append(mean(temp_accs))
     l_precision = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[0,1]))
     precision.append(l_precision)
     l_recall = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[1,0]))
@@ -82,7 +87,7 @@ plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.savefig('/projectnb/riseprac/GroupB/Images/MAINloss'+str(run_num)+'.png')
 
-plt.plot(x,acc,color = 'g')
+plt.plot(x,accs,color = 'g')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy (dec)')
 plt.savefig('/projectnb/riseprac/GroupB/Images/MAINaccuracy'+str(run_num)+'.png')
@@ -97,7 +102,7 @@ plt.xlabel("Epochs")
 plt.ylabel("Score (%)")
 plt.savefig('/projectnb/riseprac/GroupB/Images/MAINscores'+str(run_num)+'.png')
 
-sns_plot = sns.heatmap(conf_mat/np.sum(conf_mat), annot=True,
+sns_plot = sns.heatmap(conf_mat/sum(conf_mat), annot=True,
             fmt='.2%', cmap='Blues')
 conf_img = sns_plot.get_figure()    
 conf_img.savefig('/projectnb/riseprac/GroupB/Images/MAINconf_mat' + str(run_num)+ '.png')

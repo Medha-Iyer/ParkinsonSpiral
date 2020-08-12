@@ -33,7 +33,7 @@ dim= {"Meander": (561,580), "Spiral" : (678,686), "Circle" : (238,211)}
     returns: a tuple containing a numpy array of the data and an vertical vector
     with the corresponding values
 """
-outPath = '/projectnb/riseprac/GroupB/processedData'
+outPath = '/projectnb/riseprac/GroupB/preprocessedData'
 
 meanders = []
 spirals = []
