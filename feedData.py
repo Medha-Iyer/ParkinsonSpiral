@@ -8,15 +8,42 @@ import seaborn as sns
 import os
 from statistics import mean
 
+
+def evaluate():
+    NN.eval()
+    test_acc = []
+    for j, (Xme,Xsp,Xci,y) in enumerate(test_loader):
+        batch_size = Xm.shape[0]
+        Xme,Xsp,Xci = Xme.to(device),Xsp.to(device),Xci.to(device)
+        y = y.to(device)
+        yhat = NN.forward(Xm,Xs,Xc).reshape(batch_size)
+        yhat = (yhat>0.5).float()
+        
+        acc = 0.0
+        for pred,actual in zip(yhat.tolist(),y.tolist()):
+                acc += 1.0 if pred == actual else 0.0
+        test_acc.append(acc)
+    test_accs.append(sum(test_acc)/47) #there are 47 test datapoints
+    if len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < -0.01:
+        return breakout + 1
+    elif len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < 0:
+        return breakout
+    else:
+        return 0
+        
+
+
 epochs = 1500  # what value should we set this
 batch_size = 10
 threshold = 0.5
 run_num = 1
 losses = []
 accs = []
+test_accs = []
 precision = []
 recall = []
 f1 = []
+breakout = 0
 
 conf_mat = torch.zeros(2, 2)
 
@@ -27,6 +54,13 @@ Xs = torch.load(os.path.join(filePath, "Xs_train.pt"))
 Xc = torch.load(os.path.join(filePath, "Xc_train.pt"))
 y_train = torch.load(os.path.join(filePath, "y_train.pt"))
 
+Xm_test = torch.load(os.path.join(filePath, "Xm_test.pt"))
+Xs_test = torch.load(os.path.join(filePath, "Xs_test.pt"))
+Xc_test = torch.load(os.path.join(filePath, "Xc_test.pt"))
+y_test = torch.load(os.path.join(filePath, "y_test.pt"))
+
+test_set = CombDataset.Dataset(Xm_test,Xs_test,Xc_test,y_test)
+test_loader =torch.utils.data.DataLoader(test_set, batch_size, shuffle=True)
 
 dataset = CombDataset.Dataset(Xm,Xs,Xc,y_train)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
@@ -69,6 +103,7 @@ for i in range (epochs):
         if j % 15 == 14:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                  epochs, np.round(loss.data.item(), 3), np.round(acc.data.item(), 3)))
+        
     losses.append(mean(temp_losses))
     accs.append(mean(temp_accs))
     l_precision = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[0,1]))
@@ -76,6 +111,13 @@ for i in range (epochs):
     l_recall = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[1,0]))
     recall.append(l_recall)
     f1.append(2* ((l_precision*l_recall)/(l_precision+l_recall)))
+    
+    if (i+1) % 5 == 0:
+        breakout = evaluate()
+        if breakout >= 5:
+            print("Breakout triggered at epoch",i)
+            break
+    NN.train()
 
 
 x = list(range(len(losses)))
