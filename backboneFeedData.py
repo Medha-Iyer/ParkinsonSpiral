@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-epochs = 100  # what value should we set this
+epochs = 200  # what value should we set this
 batch_size = 5
 threshold = 0.5
 run_num = 1
@@ -33,38 +33,42 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
 # train_spiral_loader = torch.DataLoader(train_spirals, batch_size)
 # train_circle_loader = torch.DataLoader(train_circles, batch_size)
 
-device1 = torch.device('cuda:0')
+device = torch.device(0)
+print('Device available',device)
 
 NN = BackboneNN(num_classes=1, size=(756, 822))  # hardcoded for now
-NN.to(device1)
+NN.to(device)
+print('Sucess!')
 
 # TODO maybe set these as default values in constructor
 
 optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.05)  # TODO ask about lr
-torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1, last_epoch=-1)
+torch.optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1, last_epoch=-1)
 cost_func = nn.BCELoss()
 
 for i in range(epochs):
     for j, (X, y) in enumerate(data_loader):
-        X = X.to(device1)
-        y = y.to(device1)
-        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(
-            batch_size)  # reshaped to batchsize
+        curr_batch = X.shape[0]
+        X = X.to(device)
+        y = y.to(device)
+        yhat = NN.forward(X[:, 0], X[:, 1], X[:, 2]).reshape(curr_batch)  # reshaped to batchsize
         loss = cost_func(yhat, y)
-        yhat = (yhat > threshold).float()
-        acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
 
-        for pred, actual in zip(yhat.tolist(), y.tolist()):
-            conf_mat[int(actual), int(pred)] += 1
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
+        yhat = (yhat > threshold).float()
+        acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
+        
+        for pred, actual in zip(yhat.tolist(), y.tolist()):
+            conf_mat[int(actual), int(pred)] += 1
+        
         losses.append(loss.data.item())  # was loss.data[0]
         accs.append(acc.data.item())  # was acc.data[0]
-        if (j + 1) % 10 == 0:
+        if (j + 1) % 25 == 0:
             print("[{}/{}], loss: {} acc: {}".format(i,
-                                                     epochs, np.round(loss.data[0], 3), np.round(acc.data[0], 3)))
+                                                     epochs, loss.data.item(), 5, acc.data.item(), 5))
     temp_precision = (conf_mat[1, 1]) / ((conf_mat[1, 1]) + (conf_mat[0, 1]))
     precision.append(temp_precision)
     temp_recall = (conf_mat[1, 1]) / ((conf_mat[1, 1]) + (conf_mat[1, 0]))
@@ -75,12 +79,13 @@ x = list(range(len(losses)))
 
 fig = plt.figure()
 plt.plot(x, losses, color='r')
-plt.x_label('Minibatches')
-plt.y_label('Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
 plt.savefig('./images/loss' + str(run_num) + '.png')
 
 plt.plot(x, acc, color='g')
-plt.y_label('Accuracy (dec)')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy (dec)')
 plt.savefig('./images/accuracy' + str(run_num) + '.png')
 
 x = list(range(epochs))
@@ -88,8 +93,8 @@ plt.plot(x, precision, color='b', label='precision')
 plt.plot(x, recall, color='r', label='recall')
 plt.plot(x, f1, color='k', label='f1 score')
 
-plt.x_label("Epoch")
-plt.y_label("Score (%)")
+plt.xlabel("Epoch")
+plt.ylabel("Score (%)")
 plt.savefig('./images/scores' + str(run_num) + '.png')
 
 sns_plot = sns.heatmap(conf_mat / np.sum(conf_mat), annot=True,

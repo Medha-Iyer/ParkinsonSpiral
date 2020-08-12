@@ -41,7 +41,7 @@ NN.to(device)
 
 
 optimizer = torch.optim.Adam(params=NN.parameters(), lr=0.05)  # TODO ask about lr
-torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1, last_epoch=-1)
+torch.optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1, last_epoch=-1)
 cost_func = nn.BCELoss()
 
 

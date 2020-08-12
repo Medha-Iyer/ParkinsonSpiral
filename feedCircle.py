@@ -16,10 +16,10 @@ import os
 from statistics import mean
 import seaborn as sns
 
-epochs =  1000#remember for circles it's practically multiplied by 4
+epochs =  200#remember for circles it's practically multiplied by 4
 batch_size = 10
 threshold = 0.5
-run_num = 2
+run_num = 3
 temp_losses =[]
 temp_accs = []
 losses = []
@@ -76,7 +76,6 @@ for i in range(epochs):
         if j % 15 == 14:
             print("[{}/{}], loss: {} acc: {}".format(i,
                                                  epochs, np.round(loss.data.item(), 3), np.round(acc.data.item(), 3)))
-    
     losses.append(mean(temp_losses))
     accs.append(mean(temp_accs))
     l_precision = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[0,1]))
@@ -110,7 +109,7 @@ plt.ylabel("Score (%)")
 plt.savefig('/projectnb/riseprac/GroupB/Images/CircleScores'+str(run_num)+'.png')
 
 
-ns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
+sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
             fmt='.2%', cmap='Blues')
 sns_plot.savefig('../Images/CircleConf_mat' +str(run_num)+ '.png')
 
