@@ -39,7 +39,7 @@ spirals = []
 circles = []
 values = [] # 1 for PD and 0 for Healthy
 
-DATADIR = '/Users/adamwasserman/Documents/Image_Data'
+DATADIR = '/projectnb/riseprac/GroupB'
 cat1 = ["Healthy","Patient"]
 cat2 = ["Meander","Spiral"]
 for health in cat1:
