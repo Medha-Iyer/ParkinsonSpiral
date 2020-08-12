@@ -16,7 +16,7 @@ def evaluate():
         batch_size = Xm.shape[0]
         Xme,Xsp,Xci = Xme.to(device),Xsp.to(device),Xci.to(device)
         y = y.to(device)
-        yhat = NN.forward(Xm,Xs,Xc).reshape(batch_size)
+        yhat = NN.forward(Xme,Xsp,Xci).reshape(batch_size)
         yhat = (yhat>0.5).float()
         
         acc = 0.0
@@ -81,7 +81,7 @@ optimizer = torch.optim.ASGD(params=NN.parameters())  # TODO ask about lr
 cost_func = nn.BCELoss()
 
 
-for i in range (epochs):
+for i in range(epochs):
     temp_accs = []
     temp_losses = []
     for j, (Xme,Xsp,Xci,y) in enumerate(data_loader):
@@ -118,6 +118,8 @@ for i in range (epochs):
         if breakout >= 3:
             print("Breakout triggered at epoch",i)
             break
+        if breakout == 0:
+            torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/MAINstate_dict' + str(run_num) + '.pt')
     NN.train()
 
 
@@ -149,5 +151,3 @@ sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
             fmt='.2%', cmap='Blues')
 conf_img = sns_plot.get_figure()    
 conf_img.savefig('/projectnb/riseprac/GroupB/Images/MAINconf_mat' + str(run_num)+ '.png')
-
-torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/MAINstate_dict' + str(run_num) + '.pt')
