@@ -14,10 +14,10 @@ from statistics import mean
 from CombDataset import Dataset
 import numpy as np
 
-Xm_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/Xm_test.pt')
-Xs_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/Xs_test.pt')
-Xc_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/Xc_test.pt')
-y_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/y_test.pt')
+Xm_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/Xm_test1.pt')
+Xs_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/Xs_test1.pt')
+Xc_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/Xc_test1.pt')
+y_test = torch.load('/projectnb/riseprac/GroupB/preprocessedData/y_test1.pt')
 
 dataset = Dataset(Xm_test,Xs_test,Xc_test, y_test)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=13,shuffle=False)
@@ -27,6 +27,7 @@ accs = []
 precision = []
 recall = []
 f1 = []
+acc = 0.0
 
 device=torch.device('cuda:0')
 NN = SimpleConv(num_classes=1,size = (238,211)) #hardcoded for now
@@ -41,7 +42,6 @@ for j, (Xm,Xs,Xc,y) in enumerate(data_loader):
     yhat = NN.forward(Xm,Xs,Xc).reshape(batch_size)
     yhat = (yhat>0.5).float()
     
-    acc = 0.0
     for pred,actual in zip(yhat.tolist(),y.tolist()):
             conf_mat[int(actual),int(pred)] += 1
             acc += 1.0 if pred == actual else 0.0
@@ -55,33 +55,19 @@ for j, (Xm,Xs,Xc,y) in enumerate(data_loader):
     f1.append(2* ((l_precision*l_recall)/(l_precision+l_recall)))
     
 
-
-x = list(range(len(accs)))
-
 fig = plt.figure()
-plt.plot(x,accs,color = 'g')
-plt.xlabel('Batches')
-plt.ylabel('Accuracy (dec)')
-plt.savefig('/projectnb/riseprac/GroupB/Images/CombAccuracyFINAL.png')
 
-fig = plt.figure()
-plt.plot(x,precision,color='b',label = 'precision')
-plt.plot(x,recall,color='r', label = 'recall')
-plt.plot(x,f1,color='k',label = 'f1 score')
-plt.legend()
-
-plt.xlabel("Epoch")
-plt.ylabel("Score (%)")
-plt.savefig('/projectnb/riseprac/GroupB/Images/CombScoresFINAL.png')
-
-fig = plt.figure()
 labels = ['True Neg','False Pos','False Neg','True Pos']
 labels = np.asarray(labels).reshape(2,2)
-sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=labels, fmt='.2', cmap='Blues')
+x_axis_labels = ['Healthy', 'PD']
+y_axis_labels = ['PD', 'Healthy']
+sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=labels, fmt='.2', xticklabels=x_axis_labels, yticklabels=y_axis_labels, cmap='Blues')
+plt.xlabels('Predicted Category')
+plt.ylabels('True Category')
 conf_img = sns_plot.get_figure()    
-conf_img.savefig('/projectnb/riseprac/GroupB/Images/CombConf_mat.png')
+conf_img.savefig('/projectnb/riseprac/GroupB/Images/CombConf_matFINAL.png') 
 
-print('Accuracy =',mean(accs))
+print('Accuracy =',acc/44)
 print('Final precision =',precision[-1])
 print('Final recall =',recall[-1])
 print('Final f1 =',f1[-1])

@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Aug 10 22:31:40 2020
+
+@author: adamwasserman
+"""
+
 from spiralArch import SpiralConv
 import Dataset
 import torch
@@ -8,22 +16,52 @@ import os
 from statistics import mean
 import seaborn as sns
 
+def evaluate():
+    NN.eval()
+    test_acc = []
+    for j, (Xs,y) in enumerate(test_loader):
+        batch_size = Xs.shape[0]
+        Xs = Xs.to(device)
+        y = y.to(device)
+        yhat = NN.forward(Xs).reshape(batch_size)
+        yhat = (yhat>0.5).float()
+        
+        acc = 0.0
+        for pred,actual in zip(yhat.tolist(),y.tolist()):
+                acc += 1.0 if pred == actual else 0.0
+        test_acc.append(acc)
+    test_accs.append(sum(test_acc)/52) #there are 52 test datapoints
+    print("Test accuracy of=",test_accs[-1])
+    if len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < -0.01:
+        return breakout + 1
+    elif len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < 0:
+        return breakout
+    else:
+        return 0
+
 epochs =  1000#remember for circles it's practically multiplied by 4
 batch_size = 10
 threshold = 0.5
-run_num = 5
+run_num = 7
 losses = []
 accs = []
+test_accs = []
 precision = []
 recall = []
 f1 = []
+breakout = 0
 
 conf_mat = torch.zeros(2,2)
 
 filePath = '/projectnb/riseprac/GroupB/preprocessedData'
 
-X_train = torch.load(os.path.join(filePath,"Xs_train.pt"))
-y_train = torch.load(os.path.join(filePath,"y_train.pt"))
+X_train = torch.load(os.path.join(filePath,"Xs_train1.pt"))
+X_test = torch.load(os.path.join(filePath,"Xs_test.pt"))
+y_train = torch.load(os.path.join(filePath,"y_train1.pt"))
+y_test = torch.load(os.path.join(filePath,"y_test.pt"))
+
+testset = Dataset.Dataset(X_test, y_test)
+test_loader = torch.utils.data.DataLoader(testset, batch_size, shuffle=True)
 
 dataset = Dataset.Dataset(X_train, y_train)
 data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
@@ -33,7 +71,7 @@ data_loader = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
 # train_circle_loader = torch.DataLoader(train_circles, batch_size)
 
 device=torch.device('cuda:0')
-NN = SpiralConv(num_classes=1,size = (678,686)) #hardcoded for now
+NN = SpiralConv(num_classes=1,size = (238,211)) #hardcoded for now
 NN.to(device)
 
 #TODO maybe set these as default values in constructor
@@ -43,8 +81,8 @@ optimizer = torch.optim.ASGD(params=NN.parameters(), lr=0.01) #TODO ask about lr
 cost_func = nn.BCELoss()
 
 for i in range(epochs):
-    temp_losses =[]
     temp_accs = []
+    temp_losses = []
     for j, (X,y) in enumerate(data_loader):
         current_batch = y.shape[0]
         X = X.to(device)
@@ -53,7 +91,7 @@ for i in range(epochs):
         loss = cost_func(yhat, y)
         yhat = (yhat>threshold).float()
         acc = torch.eq(yhat.round(), y).float().mean()  # accuracy
-
+        
         for pred,actual in zip(yhat.tolist(),y.tolist()):
             conf_mat[int(actual),int(pred)] += 1
         optimizer.zero_grad()
@@ -73,6 +111,13 @@ for i in range(epochs):
     l_recall = (conf_mat[1,1])/((conf_mat[1,1]) + (conf_mat[1,0]))
     recall.append(l_recall)
     f1.append(2* ((l_precision*l_recall)/(l_precision+l_recall)))
+    
+    if (i+1) % 5 == 0:
+        breakout = evaluate()
+        if breakout >= 3:
+            print("Breakout triggered at epoch",i)
+            break
+    NN.train()
 
 
 x = list(range(len(losses)))
@@ -83,14 +128,12 @@ plt.xlabel('Minibatches')
 plt.ylabel('Loss')
 plt.savefig('/projectnb/riseprac/GroupB/Images/SpiralLoss'+str(run_num)+'.png')
 
-fig = plt.figure()
 plt.plot(x,accs,color = 'g')
 plt.xlabel('Minibatches')
 plt.ylabel('Accuracy (dec)')
 plt.savefig('/projectnb/riseprac/GroupB/Images/SpiralAccuracy'+str(run_num)+'.png')
 
 x = list(range(epochs))
-fig = plt.figure()
 plt.plot(x,precision,color='b',label = 'precision')
 plt.plot(x,recall,color='r', label = 'recall')
 plt.plot(x,f1,color='k',label = 'f1 score')
@@ -100,12 +143,17 @@ plt.xlabel("Epoch")
 plt.ylabel("Score (%)")
 plt.savefig('/projectnb/riseprac/GroupB/Images/SpiralScores'+str(run_num)+'.png')
 
-
 fig = plt.figure()
-sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
-            fmt='.2%', cmap='Blues')
-conf_img = sns_plot.get_figure()    
-conf_img.savefig('/projectnb/riseprac/GroupB/Images/SPIRALconf_mat' + str(run_num)+ '.png')
+
+labels = ['True Neg','False Pos','False Neg','True Pos']
+labels = np.asarray(labels).reshape(2,2)
+x_axis_labels = ['Healthy', 'PD']
+y_axis_labels = ['PD', 'Healthy']
+sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=labels, fmt='.2', xticklabels=x_axis_labels, yticklabels=y_axis_labels, cmap='Blues')
+plt.xlabels('Predicted Category')
+plt.ylabels('True Category')
+conf_img = sns_plot.get_figure()
+conf_img.savefig('/projectnb/riseprac/GroupB/Images/SpiralConf_matFINAL.png')
 
 print('Avg/final loss =',mean(losses),losses[-1])
 print('Avg/final accuracy =',mean(accs),accs[-1])
@@ -114,4 +162,4 @@ print('Final recall =',recall[-1])
 print('Final f1 =',f1[-1])
 
 
-torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/SpiralCircleState_dict'+str(run_num)+'.pt')
+#torch.save(NN.state_dict(),'/projectnb/riseprac/GroupB/SpiralState_dict'+str(run_num)+'.pt')

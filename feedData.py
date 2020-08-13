@@ -25,7 +25,7 @@ def evaluate():
         test_acc.append(acc)
     test_accs.append(sum(test_acc)/52) #there are 52 test datapoints
     print("Test accuracy of=",test_accs[-1])
-    if len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < -0.01:
+    if len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < -0.02:
         return breakout + 1
     elif len(test_accs) > 1 and test_accs[-1] - test_accs[-2] < 0:
         return breakout
@@ -34,10 +34,10 @@ def evaluate():
         
 
 
-epochs = 500  # what value should we set this
+epochs = 350  # what value should we set this
 batch_size = 10
 threshold = 0.5
-run_num = 1
+run_num = 2
 losses = []
 accs = []
 test_accs = []
@@ -50,10 +50,10 @@ conf_mat = torch.zeros(2, 2)
 
 filePath = '/projectnb/riseprac/GroupB/preprocessedData'
 
-Xm = torch.load(os.path.join(filePath, "Xm_train.pt"))
-Xs = torch.load(os.path.join(filePath, "Xs_train.pt"))
-Xc = torch.load(os.path.join(filePath, "Xc_train.pt"))
-y_train = torch.load(os.path.join(filePath, "y_train.pt"))
+Xm = torch.load(os.path.join(filePath, "Xm_train1.pt"))
+Xs = torch.load(os.path.join(filePath, "Xs_train1.pt"))
+Xc = torch.load(os.path.join(filePath, "Xc_train1.pt"))
+y_train = torch.load(os.path.join(filePath, "y_train1.pt"))
 
 Xm_test = torch.load(os.path.join(filePath, "Xm_test.pt"))
 Xs_test = torch.load(os.path.join(filePath, "Xs_test.pt"))
@@ -145,9 +145,16 @@ plt.xlabel("Epochs")
 plt.ylabel("Score (%)")
 plt.savefig('/projectnb/riseprac/GroupB/Images/MAINscores'+str(run_num)+'.png')
 
-sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=True,
-            fmt='.2%', cmap='Blues')
-conf_img = sns_plot.get_figure()    
-conf_img.savefig('/projectnb/riseprac/GroupB/Images/MAINconf_mat' + str(run_num)+ '.png')
+fig - plt.figure()
 
-torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/MAINstate_dict' + str(run_num) + '.pt')
+labels = ['True Neg','False Pos','False Neg','True Pos']
+labels = np.asarray(labels).reshape(2,2)
+x_axis_labels = ['Healthy', 'PD']
+y_axis_labels = ['PD', 'Healthy']
+sns_plot = sns.heatmap(conf_mat/torch.sum(conf_mat), annot=labels, fmt='.2', xticklabels=x_axis_labels, yticklabels=y_axis_labels, cmap='Blues')
+plt.xlabels('Predicted Category')
+plt.ylabels('True Category')
+conf_img = sns_plot.get_figure()
+conf_img.savefig('/projectnb/riseprac/GroupB/Images/CombConf_matFINAL.png')
+
+#torch.save(NN.state_dict(), '/projectnb/riseprac/GroupB/MAINstate_dict' + str(run_num) + '.pt')
